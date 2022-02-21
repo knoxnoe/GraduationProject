@@ -4,3 +4,6 @@
 // `nodeIntegration` is turned off. Use `preload.js` to
 // selectively enable features needed in the rendering
 // process.
+console.log('ping')
+window.electron.ipc.myPing();
+// window.electron.proxy.start();

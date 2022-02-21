@@ -1,6 +1,27 @@
 // Modules to control application life and create native browser window
 const {app, BrowserWindow} = require('electron')
 const path = require('path')
+const AnyProxy = require('anyproxy');
+const { proxy } = require('./proxy');
+
+// const options = {
+//   port: 8001,
+//   // rule: require('myRuleModule'),
+//   webInterface: {
+//     enable: true,
+//     webPort: 8002
+//   },
+//   throttle: 10000,
+//   forceProxyHttps: false,
+//   wsIntercept: false, // 不开启websocket代理
+//   silent: false
+// };
+// const proxyServer = new AnyProxy.ProxyServer(options);
+
+// proxyServer.on('ready', () => { console.log('ready') });
+// proxyServer.on('error', (e) => { console.log('error') });
+// proxyServer.start();
+proxy.initNetwork('start', {});
 
 function createWindow () {
   // Create the browser window.
@@ -14,6 +35,7 @@ function createWindow () {
 
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
+  mainWindow.webContents.openDevTools()
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
