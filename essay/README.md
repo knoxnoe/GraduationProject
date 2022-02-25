@@ -73,6 +73,26 @@ Node的架构底层是一些c++的基础库、libuv、SSL、c-cares等等，赋�
 
 
 
+## 以下，都可以展开叙述
+
+#### 挂载process属性
+
+#### 与c++代码的loader、internal js的loader以及用户代码的loader
+
+#### c++代码调用js， js代码调用c++
+
+#### 如何给运行时提供接口、分为c++接口和js接口
+
+#### 事件循环 *** 必需展开 *** libuv
+
+#### node 的进程与线程
+
+<img src="README.assets/image-20220221231011481.png" alt="image-20220221231011481" style="zoom:50%;" />
+
+
+
+
+
 ## 主要概念
 
 ### 1、上下文隔离
