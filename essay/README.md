@@ -7,6 +7,8 @@
 > https://segmentfault.com/a/1190000040102915
 >
 > https://juejin.cn/post/6966626823912308772
+>
+> https://blog.5udou.cn/#/blog/detail/Hao-Shi-Liang-Ge-Yue-Wang-Shang-Zui-Quan-De-Yuan-Chuang-nodejsShen-Ru-Xi-Lie-Wen-Zhang-Chang-Da-Shi-Lai-Wan-Zi-De-Wen-Zhang-Huan-Ying-Shou-Cang-54
 
 
 
@@ -59,17 +61,103 @@ Chromium也做了类似的设计，它把每个页面约束在单独的进程中
 
 ### 2、NodeJs
 
-​	NodeJs是基于高性能V8的JavaScript执行引擎的一个服务端框架，融合了很多基础库，构建了一个单进程异步
+​	NodeJs是基于高性能V8的JavaScript执行引擎的一个服务端框架，融合了很多基础库，构建了一个单进程异步。
+
+​	Node基于V8的JS运行时，它利用V8提供的能力，极大地拓展了JS的能力，这种拓展不是为了JS增加了新的语言特性，而是拓展了功能模块。例如JS本身并没有网络相关的功能，但是通过Node扩展，可以让我们通过JS调用底层的C++模块的TCP，从而赋予网络编程的能力。
+
+​	Node.js 中最核心的部分是 Libuv 和 V8，V8 不仅负责执 行 JS，还支持自定义的拓展，实现了 JS 调用 C++和 C++调用 JS 的能力。JS 层调用的所有 C、C++模块都是通过 V8 来完成的。
 
 
 
-Node的架构底层是一些c++的基础库、libuv、SSL、c-cares等等，赋予了Node高效的系统层api。在C++和JavaScript中间定义了相互调用的胶水代码，同时利用JavaScript构建了一套包加载机制，赋予了JS项目级别的管理能力。
-
-
+​	Node的架构底层是一些c++的基础库、libuv、SSL、c-cares等等，赋予了Node高效的系统层api。在C++和JavaScript中间定义了相互调用的胶水代码，同时利用JavaScript构建了一套包加载机制，赋予了JS项目级别的管理能力。
 
 
 
 回调的时候，c++的回调最后可能要回调到js层
+
+
+
+
+
+
+
+#### 线程之间的通讯
+
+1、共享内存
+
+2、不共享栈
+
+
+
+<img src="README.assets/image-20220222200751203.png" alt="image-20220222200751203" style="zoom:50%;" />
+
+NodeJS的是单进程单线程的架构，但是在当前的机器上都是多核架构。但是NodeJS通过Cluster模块模拟，以最大限度的利用多核架构的性能。而 cluster 模块在 child_process 模块的基础上使得多个进程可以监听的同一个端口，实现服务器的多进程架构。
+
+正常情况下，一个进程只能监听一个端口，如果对端口重复监听，会上报EADDRINUSE错误，但是NodeJs通过传递文件描述符实现并不报错。
+
+
+
+管道化是对数据从一个地方流向另一个地方的抽象。
+
+
+
+#### 如何拓展c++ 
+
+Node扩展一个process对象，通过process.binding拓展js功能。Node.js定义一个全局JS对象Process映射到一个c++对象process，底层维护了一个c++模块的链表。Js访问Process对象，从而进一步访问到C++模块。
+
+<img src="README.assets/image-20220223221559590.png" alt="image-20220223221559590" style="zoom:50%;" />
+
+在InitializeOnceperProcesss部分，会先把内置的c++模块，比如DNS、HTTP等c++模块注册到一个链表中，为了后续使用时查找。
+
+```c++
+extern "C" void node_module_register(void* m) {
+  struct node_module* mp = reinterpret_cast<struct node_module*>(m);
+
+  if (mp->nm_flags & NM_F_INTERNAL) {
+    mp->nm_link = modlist_internal;
+    modlist_internal = mp;
+  } else if (!node_is_initialized) {
+    // "Linked" modules are included as part of the node project.
+    // Like builtins they are registered *before* node::Init runs.
+    mp->nm_flags = NM_F_LINKED;
+    mp->nm_link = modlist_linked;
+    modlist_linked = mp;
+  } else {
+    thread_local_modpending = mp;
+  }
+}
+
+最后都会调用一个module注册函数，如果是内置c++模块，就调用第一个if NM_F_INTERNAL为true；
+  其他情况对应的是用户自己扩展的c++，初始化时加载还是运行时再连接进来（个人理解，需进一步确认）
+```
+
+
+
+
+
+## 3、V8.js
+
+>
+>
+>https://zhuanlan.zhihu.com/p/96969423
+
+无论是chromium + Node再执行js都需要V8高性能引擎的执行效率。
+
+V8相比较一些其他的早期JavaScript引擎，它将source code直接编译成了机器码，而不是字节码。
+
+![image-20220224221721899](README.assets/image-20220224221721899.png)
+
+
+
+![image-20220224221815789](README.assets/image-20220224221815789.png)
+
+
+
+Ignition的字节码可以直接用TurboFan生成优化的机器代码，而不必像Crankshaft那样从源代码重新编译。Ignition的字节码在V8中提供了更清晰且更不容易出错的基线执行模型，简化了去优化机制，这是V8 自适应优化的关键特性。最后，由于生成字节码比生成Full-codegen的基线编译代码更快，因此激活Ignition通常会改善脚本启动时间，从而改善网页加载。
+
+TurboFan是V8的优化编译器，TurboFan项目最初于2013年底启动，旨在解决Crankshaft的缺点。Crankshaft只能优化JavaScript语言的子集。
+
+
 
 
 
