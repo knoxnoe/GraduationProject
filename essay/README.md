@@ -156,6 +156,21 @@ V8相比较一些其他的早期JavaScript引擎，它将source code直接编译
 Ignition的字节码可以直接用TurboFan生成优化的机器代码，而不必像Crankshaft那样从源代码重新编译。Ignition的字节码在V8中提供了更清晰且更不容易出错的基线执行模型，简化了去优化机制，这是V8 自适应优化的关键特性。最后，由于生成字节码比生成Full-codegen的基线编译代码更快，因此激活Ignition通常会改善脚本启动时间，从而改善网页加载。
 
 TurboFan是V8的优化编译器，TurboFan项目最初于2013年底启动，旨在解决Crankshaft的缺点。Crankshaft只能优化JavaScript语言的子集。
+## 以下，都可以展开叙述
+
+#### 挂载process属性
+
+#### 与c++代码的loader、internal js的loader以及用户代码的loader
+
+#### c++代码调用js， js代码调用c++
+
+#### 如何给运行时提供接口、分为c++接口和js接口
+
+#### 事件循环 *** 必需展开 *** libuv
+
+#### node 的进程与线程
+
+<img src="README.assets/image-20220221231011481.png" alt="image-20220221231011481" style="zoom:50%;" />
 
 
 
