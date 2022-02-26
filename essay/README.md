@@ -63,7 +63,7 @@ Chromium也做了类似的设计，它把每个页面约束在单独的进程中
 
 
 
-Node的架构底层是一些c++的基础库、libuv、SSL、c-cares等等，赋予了Node高效的系统层api。在C++和JavaScript中间定义了相互调用的胶水代码，同时利用JavaScript构建了一套包加载机制，赋予了JS项目级别的管理能力。
+​	Node的架构底层是一些c++的基础库、libuv、SSL、c-cares等等，赋予了Node高效的系统层api。在C++和JavaScript中间定义了相互调用的胶水代码，同时利用JavaScript构建了一套包加载机制，赋予了JS项目级别的管理能力。
 
 
 
