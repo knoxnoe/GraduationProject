@@ -4,6 +4,8 @@
 
 # 待选： 基于ElectronJs跨端技术的流程模型原理 
 
+# 待选： 基于Chromium 和 Node 的桌面垮端解决方案
+
 > https://segmentfault.com/a/1190000040102915
 >
 > https://juejin.cn/post/6966626823912308772
@@ -39,6 +41,10 @@ Electron主要分为了逻辑进程和渲染进程，渲染进程主要是对每
 
 ### 1、Chromium
 
+> https://tongdada.github.io/2020/06/30/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E5%A4%9A%E8%BF%9B%E7%A8%8B%E6%9E%B6%E6%9E%84/
+>
+> https://www.chromium.org/developers/design-documents/multi-process-architecture/ 中文官网
+
 同样，浏览器中任何一个行为不当的网页也可能如此。一个页面或插件的错误就可能让整个浏览器崩溃。
 
 Chromium也做了类似的设计，它把每个页面约束在单独的进程中，以保护整个浏览器不受单个页面中的故障影响。它甚至还限制了每个页面进程对其他进程和系统其他部分的访问，这极大地缓解了浏览器容易崩溃的问题。Chromium把管理页面、管理选项卡和插件的进程称为主进程。把特定于页面的进程称为渲染进程。
@@ -59,9 +65,19 @@ Chromium也做了类似的设计，它把每个页面约束在单独的进程中
 
 多进程模式并不是没有缺点，比如每个进程都会包含公共基础结构的副本（例如V8引擎的执行环境）、更复杂的通信模型等，这都意味着浏览器会消耗更多的内存、CPU甚至电能。
 
+![image](https://www.chromium.org/developers/design-documents/multi-process-architecture/arch.png)
+
+主要分为浏览器进程和渲染进程，浏览器进程中有I/O线程和主线程，渲染进程中也有主线程和render线程
+
+每一个渲染进程都有一个全局的RenderProcess对象，负责和浏览器进程通讯。同时浏览器进程中的主线程针对每一个渲染进程都有一个RenderProcessHost对象，用来通讯， 通过IPC。
+
+然后每一个渲染进程中主线程中的RenderProcess对象负责多个RenderView对象，同样的RenderProcessHost对象也针对每一个RenderVIew有一个RenderViewHost,
+
+
+
 ### 2、NodeJs
 
-​	NodeJs是基于高性能V8的JavaScript执行引擎的一个服务端框架，融合了很多基础库，构建了一个单进程异步。
+​	NodeJs是基于高性能V8的JavaScript执行引擎的一个服务端框架，融合了很多基础库，构建了一个单进程异步。是一个集web服务器和应用服务器与一身的服务器。
 
 ​	Node基于V8的JS运行时，它利用V8提供的能力，极大地拓展了JS的能力，这种拓展不是为了JS增加了新的语言特性，而是拓展了功能模块。例如JS本身并没有网络相关的功能，但是通过Node扩展，可以让我们通过JS调用底层的C++模块的TCP，从而赋予网络编程的能力。
 
@@ -102,7 +118,9 @@ NodeJS的是单进程单线程的架构，但是在当前的机器上都是多�
 
 
 
-#### 如何拓展c++ 
+## 启动流程
+
+#### 注册c++， 拓展c++ 
 
 Node扩展一个process对象，通过process.binding拓展js功能。Node.js定义一个全局JS对象Process映射到一个c++对象process，底层维护了一个c++模块的链表。Js访问Process对象，从而进一步访问到C++模块。
 
@@ -134,6 +152,137 @@ extern "C" void node_module_register(void* m) {
 
 
 
+#### ENV对象
+
+```c++
+Environment::Environment(IsolateData* isolate_data,
+                         Local<Context> context,
+                         const std::vector<std::string>& args,
+                         const std::vector<std::string>& exec_args,
+                         const EnvSerializeInfo* env_info,
+                         EnvironmentFlags::Flags flags,
+                         ThreadId thread_id)
+    : Environment(isolate_data,
+                  context->GetIsolate(),
+                  args,
+                  exec_args,
+                  env_info,
+                  flags,
+                  thread_id) {
+  InitializeMainContext(context, env_info);
+}
+```
+
+保留Context 与 env关系，后续进入v8代码就只知道Isolate和context，保留两者对应关系，可以获取对应的env
+
+同时在InitializeMainContext 中 CreateProperties中创建process对象， 要通过env->isolate()得到isolate生成一个process_template, 再通过env->context()得到context，得到process_template重的function 和 process对象
+
+```c++
+1、NodeMainInstance::Run()
+  1、NodeMainInstance::CreateMainEnvironment()
+  2、InitializeMainContext()
+  3、AssignToContext() 、 CreateProperties()
+  4、RunBootstrapping();
+		- BootstrapInternalLoaders() BootstrapNode()
+2、LoadEnvironment()
+3、InitializeLibuv()
+```
+
+
+
+- 其中BootstrapInternalLoaders就是用于执行internal/bootstrap/loaders.js
+
+```c++
+if (!ExecuteBootstrapper(
+           this, "internal/bootstrap/loaders", &loaders_params, &loaders_args)
+           .ToLocal(&loader_exports)) {
+    return MaybeLocal<Value>();
+  }
+
+执行loaders.js相当于
+ 
+function run(process, getLinkedBinding, getInternalBinging, primordials) {
+  // internal/bootstrap/loaders.js
+  // 我们可以发现loders.js使用了四个参数，但并没有定义或者引入
+  // 所以是node编译的过程中对loaders.js包装了一个层，通过c++把四个实参传给js层
+  // loaders.js中最后一行 return loaderExports; 也非常能说明问题
+}
+
+// Think of this as module.exports in this file even though it is not
+// written in CommonJS style.
+loaderExports = {
+  internalBinding, 用于加载内置c++
+  NativeModule, 用于加载内置js
+  require: nativeModuleRequire
+}
+```
+
+在loaders.js中，定义process.binding() 、process._linkedBinding() 、internalBinding
+
+Process.binding主要用于内置的js代码去使用c++层模块，
+
+- BootstrapNode() 负责初始化执行上下文
+
+
+
+在LoadEnvironment阶段之后，会调用StartExection，然后调用pre_execution.js，其中会初始化internal/modulees/cjs/loader.js，负责加载用户的js模块，至此初始化的大部分工作结束。最后一步调用uv_run(), 将Libuv事件循环启动。之后执行用户的js代码，会在libuv中注册一些任务，进入事件循环
+
+
+
+#### libuv的入口函数，代表了libuv的各个启动时间
+
+```c++
+int uv_run(uv_loop_t* loop, uv_run_mode mode) {
+  int timeout;
+  int r;
+  int ran_pending;
+
+  r = uv__loop_alive(loop);
+  if (!r)
+    uv__update_time(loop);
+
+  while (r != 0 && loop->stop_flag == 0) {
+    uv__update_time(loop);
+    uv__run_timers(loop);
+    ran_pending = uv__run_pending(loop); // 上一轮Poll IO阶段没有执行的IO回调，会在本次循环的pending阶段执行
+    uv__run_idle(loop);
+    uv__run_prepare(loop);
+
+    timeout = 0;
+    if ((mode == UV_RUN_ONCE && !ran_pending) || mode == UV_RUN_DEFAULT)
+      timeout = uv_backend_timeout(loop);
+
+    uv__io_poll(loop, timeout);
+    uv__metrics_update_idle_time(loop);
+
+    uv__run_check(loop);
+    uv__run_closing_handles(loop);
+
+    if (mode == UV_RUN_ONCE) {
+      uv__update_time(loop);
+      uv__run_timers(loop);
+    }
+
+    r = uv__loop_alive(loop);
+    if (mode == UV_RUN_ONCE || mode == UV_RUN_NOWAIT)
+      break;
+  }
+
+  if (loop->stop_flag != 0)
+    loop->stop_flag = 0;
+
+  return r;
+}
+```
+
+#### (1) 缓存最新时间，执行uv_run_timers()
+
+uv_run_timers()就是遍历最小堆，找出当前超时节点，对超时节点执行回调。然后shan chu
+
+
+
+#### Libuv 和 线程池
+
 
 
 ## 3、V8.js
@@ -157,6 +306,17 @@ V8相比较一些其他的早期JavaScript引擎，它将source code直接编译
 Ignition的字节码可以直接用TurboFan生成优化的机器代码，而不必像Crankshaft那样从源代码重新编译。Ignition的字节码在V8中提供了更清晰且更不容易出错的基线执行模型，简化了去优化机制，这是V8 自适应优化的关键特性。最后，由于生成字节码比生成Full-codegen的基线编译代码更快，因此激活Ignition通常会改善脚本启动时间，从而改善网页加载。
 
 TurboFan是V8的优化编译器，TurboFan项目最初于2013年底启动，旨在解决Crankshaft的缺点。Crankshaft只能优化JavaScript语言的子集。
+
+Monomorphic
+
+### Compiler Pipeline
+
+<img src="/Users/bytedance/Library/Application Support/typora-user-images/image-20220228204432612.png" alt="image-20220228204432612" style="zoom:50%;" />
+
+<img src="/Users/bytedance/Library/Application Support/typora-user-images/image-20220228204835781.png" alt="image-20220228204835781" style="zoom:50%;" />
+
+
+
 ## 以下，都可以展开叙述
 
 #### 挂载process属性
