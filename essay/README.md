@@ -11,6 +11,8 @@
 > https://juejin.cn/post/6966626823912308772
 >
 > https://blog.5udou.cn/#/blog/detail/Hao-Shi-Liang-Ge-Yue-Wang-Shang-Zui-Quan-De-Yuan-Chuang-nodejsShen-Ru-Xi-Lie-Wen-Zhang-Chang-Da-Shi-Lai-Wan-Zi-De-Wen-Zhang-Huan-Ying-Shou-Cang-54
+>
+> https://www.bookstack.cn/read/Chromium_doc_zh/README.md chromiun中文文档
 
 
 
@@ -71,7 +73,55 @@ Chromium也做了类似的设计，它把每个页面约束在单独的进程中
 
 每一个渲染进程都有一个全局的RenderProcess对象，负责和浏览器进程通讯。同时浏览器进程中的主线程针对每一个渲染进程都有一个RenderProcessHost对象，用来通讯， 通过IPC。
 
-然后每一个渲染进程中主线程中的RenderProcess对象负责多个RenderView对象，同样的RenderProcessHost对象也针对每一个RenderVIew有一个RenderViewHost,
+然后每一个渲染进程中主线程中的RenderProcess对象负责多个RenderView对象，同样的RenderProcessHost对象也针对每一个RenderVIew有一个RenderViewHost, 每一个RenderView对应一个View，与一个唯一的ID（只在一个渲染器内唯一）。
+
+
+
+### 组件与接口
+
+在渲染进程中：
+
+- *RenderProcess*处理与浏览器中对应的*RenderProcessHost*的通信。每个渲染进程就有唯一的一个RenderProcess对象。这就是所有浏览器-渲染器之间的交互发生的方式。
+- RenderView对象与它在浏览器进程中对应的RenderViewHost和我们的webkit嵌入层通信（通过RenderProcess）。这个对象代表了一个网页在标签页或一个弹出窗口的内容。
+
+在浏览器进程中:
+
+- Browser对象代表了顶级浏览器窗口
+- RenderProcessHost对象代表了浏览器端浏览器的与渲染器的IPC连接。在浏览器进程里，每个渲染进程有一个RenderProcessHost对象。
+- RenderViewHost对象封装了与远端浏览器的交流，RenderWidgetHost处理输入并在浏览器中为RenderWidget进行绘制。
+
+
+
+### Chromium如何展示网页
+
++ Browser 浏览器窗口，包含多个WebContent
++ WebContent 一个可重用的组件，是内容模块的主类。易于嵌入，允许多进程讲HTML绘制成View。
++ Renderer
++ Renderer Host
++ Webkit Glue Webkit类型与Chromium类型转换
++ Webkit
+
+### “鼠标点击”消息的生命周期
+
+发送一个鼠标点击是一个经典的浏览器到渲染器的例子。
+
+- Windows消息在浏览器的UI线程被RenderWidgetHostViewWin::OnMouseEvent接收，然后在同一个类中调用ForwardMouseEventToRenderer。
+- 转发函数打包输入时间为一个跨平台的WebMouseEvent，最后把它发送到它所关联的RenderWidgetHost.
+- RenderWidgetHost::ForwardInputEvent创建一个IPC消息ViewMsg_HandleInputEvent，将这个WebInputEvent对象序列化进去，然后调用RenderWidgetHost::Send。
+- 这只是转发到自己的RenderProcessHost::Send函数，它会轮流将消息发送给IPC::ChannelProxy。
+- 在内部，IPC::ChannelProxy会将消息代理到浏览器的I/O线程，将它写入渲染器对应的命名管道。
+
+注意，许多种消息创建于WebContents，特别是导航类的消息。这些消息遵循一个相似的从WebContents到RenderViewHost的路径。
+
+然后渲染器得到了控制权：
+
+- 渲染器主线程的IPC::Channel读取浏览器发送的消息，然后IPC::ChannelProxy将消息代理到渲染线程。
+- RenderView::OnMessageReceived拿到这个消息。许多种消息在这里直接处理。由于点击事件不是，它继续往下走（和其他所有没有被处理的消息一起）到RenderWidget::OnMessageReceived，它会轮流把消息转发给RenderWidget::OnHandleInputEvent。
+- 输入事件被交给WebWidgetImpl::HandleInputEvent，在这里它被转换成一个WebKit PlatformMouseEvent类，然后交给WebKit内的WebCore::Widget类。
+
+### 跨进程通信 IPC
+
+
 
 
 
