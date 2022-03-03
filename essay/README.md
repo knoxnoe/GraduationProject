@@ -8,9 +8,9 @@
 
 > https://segmentfault.com/a/1190000040102915
 >
-> https://juejin.cn/post/6966626823912308772
+> https://juejin.cn/post/6966626823912308772 写给前端的跨平台方案、跨端引擎的本质
 >
-> https://blog.5udou.cn/#/blog/detail/Hao-Shi-Liang-Ge-Yue-Wang-Shang-Zui-Quan-De-Yuan-Chuang-nodejsShen-Ru-Xi-Lie-Wen-Zhang-Chang-Da-Shi-Lai-Wan-Zi-De-Wen-Zhang-Huan-Ying-Shou-Cang-54
+> https://blog.5udou.cn/#/blog/detail/Hao-Shi-Liang-Ge-Yue-Wang-Shang-Zui-Quan-De-Yuan-Chuang-nodejsShen-Ru-Xi-Lie-Wen-Zhang-Chang-Da-Shi-Lai-Wan-Zi-De-Wen-Zhang-Huan-Ying-Shou-Cang-54 Node相关
 >
 > https://www.bookstack.cn/read/Chromium_doc_zh/README.md chromiun中文文档
 
@@ -120,6 +120,12 @@ Chromium也做了类似的设计，它把每个页面约束在单独的进程中
 - 输入事件被交给WebWidgetImpl::HandleInputEvent，在这里它被转换成一个WebKit PlatformMouseEvent类，然后交给WebKit内的WebCore::Widget类。
 
 ### 跨进程通信 IPC
+
+### 多进程资源请求
+
+### 沙箱
+
+沙箱的目标是提供这样一种保证：不论输入什么，保证一段代码最终能或不能做的事情。
 
 
 
