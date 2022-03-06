@@ -106,7 +106,7 @@ Electron是基于Chromium和Node之上的跨平台解决方案，它借鉴和利
 
 ### Chromium
 
-![image-20220305112940461](/Users/bytedance/personal/GraduationProject/essay/main.assets/image-20220305112940461.png)
+![image-20220305112940461](main.assets/image-20220305112940461.png)
 
 - 多进程架构
 
