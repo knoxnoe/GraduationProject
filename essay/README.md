@@ -46,6 +46,8 @@ Electron主要分为了逻辑进程和渲染进程，渲染进程主要是对每
 > https://tongdada.github.io/2020/06/30/%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E5%A4%9A%E8%BF%9B%E7%A8%8B%E6%9E%B6%E6%9E%84/
 >
 > https://www.chromium.org/developers/design-documents/multi-process-architecture/ 中文官网
+>
+> https://segmentfault.com/a/1190000014018604 浏览器
 
 同样，浏览器中任何一个行为不当的网页也可能如此。一个页面或插件的错误就可能让整个浏览器崩溃。
 
