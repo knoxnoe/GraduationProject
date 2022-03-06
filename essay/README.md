@@ -69,7 +69,9 @@ Chromium也做了类似的设计，它把每个页面约束在单独的进程中
 
 多进程模式并不是没有缺点，比如每个进程都会包含公共基础结构的副本（例如V8引擎的执行环境）、更复杂的通信模型等，这都意味着浏览器会消耗更多的内存、CPU甚至电能。
 
-![image](https://www.chromium.org/developers/design-documents/multi-process-architecture/arch.png)
+s![image-20220305112940461](/Users/bytedance/personal/GraduationProject/essay/README.assets/image-20220305112940461.png)
+
+
 
 主要分为浏览器进程和渲染进程，浏览器进程中有I/O线程和主线程，渲染进程中也有主线程和render线程
 
@@ -369,9 +371,9 @@ Monomorphic
 
 ### Compiler Pipeline
 
-<img src="/Users/bytedance/Library/Application Support/typora-user-images/image-20220228204432612.png" alt="image-20220228204432612" style="zoom:50%;" />
+![image-20220228204432612](./README.assets/image-20220228204432612-6547474.png)
 
-<img src="/Users/bytedance/Library/Application Support/typora-user-images/image-20220228204835781.png" alt="image-20220228204835781" style="zoom:50%;" />
+![image-20220228204432612](./README.assets/image-20220228204835781.png)
 
 
 
