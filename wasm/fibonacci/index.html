@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      fetch('./fib.wasm')
+        .then((res) => {
+          return res.arrayBuffer()
+        })
+        .then(WebAssembly.instantiate)
+        .then((module) => {
+          const start = performance.now()
+          let res = module.instance.exports.fib(45)
+          let end = performance.now()
+          console.log(res)
+          console.log(`fib(${20})---`, `${(end - start).toFixed(2)} ms`)
+        })
+
+      function fib(n) {
+        if (n < 2) return 1
+        return fib(n - 2) + fib(n - 1)
+      }
+      const start = performance.now()
+      console.log(fib(45))
+      const end = performance.now()
+      console.log(`fib(${45})---`, `${(end - start).toFixed(2)} ms`)
+
+      // for (let i = 20; i <= 60; i += 20) {
+      // const start = performance.now()
+      // fib(i)
+      // const end = performance.now()
+      // console.log(`fib(${i})---`, `${(end - start).toFixed(2)} ms`)
+      // }
+    </script>
+  </body>
+</html>
