@@ -1,0 +1,14 @@
+prefix=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist
+exec_prefix=${prefix}
+libdir=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist/lib
+includedir=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist/include
+
+Name: libavfilter
+Description: FFmpeg audio/video filtering library
+Version: 8.29.100
+Requires: libswscale >= 6.6.100, libavformat >= 59.20.101, libavcodec >= 59.25.100, libavutil >= 57.24.101
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavfilter -lm
+Libs.private: 
+Cflags: -I${includedir}

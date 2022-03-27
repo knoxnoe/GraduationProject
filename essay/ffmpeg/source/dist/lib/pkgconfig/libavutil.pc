@@ -1,0 +1,14 @@
+prefix=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist
+exec_prefix=${prefix}
+libdir=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist/lib
+includedir=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 57.24.101
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil -lm -lX11
+Libs.private: 
+Cflags: -I${includedir}
