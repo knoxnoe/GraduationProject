@@ -1,0 +1,14 @@
+prefix=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist
+exec_prefix=${prefix}
+libdir=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist/lib
+includedir=/Users/noe/noes/paper/GraduationProject/essay/ffmpeg/source/ffmpeg/../dist/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 59.20.101
+Requires: libavcodec >= 59.25.100, libavutil >= 57.24.101
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavformat -lm
+Libs.private: 
+Cflags: -I${includedir}

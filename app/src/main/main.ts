@@ -38,11 +38,14 @@ ipcMain.on('proxy', async (event, arg) => {
   console.log('main process', arg);
   proxy.initNetwork('start', {
     beforeSendRequest: (detail) => {
-      console.log(detail.requestOptions.hostname);
+      console.log('-----------before request----------');
+      console.log(detail);
     },
-    // beforeSendResponse: (detail) => {
-    //   console.log(detail);
-    // },
+    beforeSendResponse: (detail, response) => {
+      console.log('-----------before response----------');
+      console.log(detail);
+      console.log(response);
+    },
   });
 });
 
