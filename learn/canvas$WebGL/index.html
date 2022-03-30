@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div style="margin-left: 100px">
+      <canvas id="_fps_canvas"></canvas>
+    </div>
+
+    <script>
+      let canvas = document.getElementById('_fps_canvas')
+      const WIDTH = canvas.width
+      const HEIGHT = canvas.height
+      let ctx = canvas && canvas.getContext('2d')
+      if (!ctx) {
+        console.info('浏览器不支持canvas')
+      } else {
+        let lastTime = 0
+        let fpsInterVal = 30 // fps监听间隔次数
+        let fpsCount = 0 // fps监听间隔计数
+        let fps = 0 // fps值
+        let getFps = function () {
+          fpsCount++
+          let nowTime = performance.now()
+          if (fpsCount >= fpsInterVal) {
+            fps = Math.round((1000 * fpsCount) / (nowTime - lastTime))
+            lastTime = nowTime
+            fpsCount = 0
+          }
+          return fps
+        }
+
+        function randomColor() {
+          return 'rgb( ' + ((Math.random() * 255) >> 0) + ',' + ((Math.random() * 255) >> 0) + ',' + ((Math.random() * 255) >> 0) + ' )'
+        }
+        function drawCirle(radius = 5) {
+          const x = Math.random() * WIDTH
+          const y = Math.random() * HEIGHT
+          ctx.fillStyle = '#eee'
+          ctx.beginPath()
+          ctx.arc(x, y, radius, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
+        function draw(count = 1000) {
+          for (let i = 0; i < count; i++) {
+            drawCirle()
+          }
+        }
+
+        let clearCanvas = function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+        }
+
+        let startDraw = function (time) {
+          clearCanvas()
+          ctx.font = '22px serif'
+          ctx.fillStyle = '#000'
+          ctx.fillText(getFps() + ' fps', 10, 20)
+          draw()
+          window.requestAnimationFrame(startDraw)
+        }
+
+        startDraw()
+      }
+    </script>
+    <!-- <canvas id="canvas"></canvas>
+    <script>
+      const canvas = document.getElementById('canvas')
+      const ctx = canvas.getContext('2d')
+      const WIDTH = canvas.width
+      const HEIGHT = canvas.height
+
+      function randomColor() {
+        return 'rgb( ' + ((Math.random() * 255) >> 0) + ',' + ((Math.random() * 255) >> 0) + ',' + ((Math.random() * 255) >> 0) + ' )'
+      }
+      function drawCirle(radius = 5) {
+        const x = Math.random() * WIDTH
+        const y = Math.random() * HEIGHT
+        ctx.fillStyle = randomColor()
+        ctx.beginPath()
+        ctx.arc(x, y, radius, 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      function draw(count = 1000) {
+        for (let i = 0; i < count; i++) {
+          drawCirle()
+        }
+      }
+      function update() {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+        draw()
+        requestAnimationFrame(update)
+      }
+      requestAnimationFrame(update)
+    </script> -->
+  </body>
+</html>

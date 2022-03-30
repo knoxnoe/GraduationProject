@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Draw points with specified color</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400"> Please use a browser that supports "canvas" </canvas>
+
+    <script src="./lib/webgl-utils.js"></script>
+    <script src="./lib/webgl-debug.js"></script>
+    <script src="./lib/cuon-utils.js"></script>
+    <script src="./lib/cuon-matrix.js"></script>
+    <script>
+      function main() {
+        var VSHADER_SOURCE = 'attribute vec4 position;' + 'varying vec4 a_color;attribute vec4 g_color;' + 'void main(){' + 'gl_Position=position;' + 'gl_PointSize=10.0;' + 'a_color=g_color;}'
+
+        var FSHADER_SOURCE =
+          'precision mediump float;\n' + //指定精度
+          'varying vec4 a_color;\n' +
+          'void main() { \n' +
+          'gl_FragColor = a_color;\n' +
+          '}\n'
+
+        var canvas = document.getElementById('webgl')
+        var gl = getWebGLContext(canvas)
+
+        initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE) //初始化
+
+        var position = gl.getAttribLocation(gl.program, 'position')
+
+        var color = gl.getAttribLocation(gl.program, 'g_color')
+
+        //设置3组数据，每组前两个数位坐标，后三个数为颜色值
+        var data = new Float32Array([-0.5, -0.5, 1.0, 0.0, 0.0, 0.0, 0.5, 0.0, 1.0, 0.0, 0.5, -0.5, 0.0, 0.0, 1.0])
+
+        var FSIZE = data.BYTES_PER_ELEMENT //数组中每个元素所占的字节数
+
+        var buffer1 = gl.createBuffer()
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer1)
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
+        gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 5 * FSIZE, 0)
+        gl.enableVertexAttribArray(position)
+
+        gl.vertexAttribPointer(color, 3, gl.FLOAT, false, FSIZE * 5, FSIZE * 2)
+        gl.enableVertexAttribArray(color)
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0)
+
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.POINTS, 0, 3) //从0点开始绘制3个点
+      }
+    </script>
+  </body>
+</html>

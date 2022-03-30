@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <canvas id="_fps_canvas" width="700px" height="500px"></canvas>
+
+    <script>
+      let canvas = document.getElementById('_fps_canvas')
+      const gl = canvas.getContext('webgl')
+      //const ctx = canvas.getContext('2d')
+      const WIDTH = canvas.width
+      const HEIGHT = canvas.height
+
+      //顶点着色器
+      const vertexShaderSource = '' + 'attribute vec4 a_Position;\n' + 'void main(){\n' + '   gl_Position = a_Position;\n' + '   gl_PointSize = 300.0;\n' + '}\n'
+
+      //片元着色器
+      const fragmentShaderSource =
+        '' +
+        '#ifdef GL_ES\n' +
+        'precision mediump float;\n' +
+        '#endif\n' +
+        'void main(){\n' + //d为当前处理的片元和中心点的距离
+        '   float d = distance(gl_PointCoord, vec2(0.5,0.5));\n' +
+        '   if(d < 0.5){\n' + //判断距离，如果小于0.5就绘制
+        '       gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n' +
+        '   }else{ discard;}\n' +
+        '}\n'
+
+      function main() {
+        //获取WebGL对象
+        var gl = getWebGLContext(canvas)
+
+        //初始化着色器
+        initShaders(gl, vertexShaderSource, fragmentShaderSource)
+
+        //将数据存入缓冲区
+        var n = initVertexBuffers(gl)
+        if (n < 0) {
+          console.log('数据存入缓冲区失败')
+          return
+        }
+
+        //设置背景色
+        gl.clearColor(0.0, 0.0, 0.0, 1.0)
+
+        //清空背景
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.POINTS, 0, n)
+      }
+
+      function randomColor() {
+        return 'rgb( ' + ((Math.random() * 255) >> 0) + ',' + ((Math.random() * 255) >> 0) + ',' + ((Math.random() * 255) >> 0) + ' )'
+      }
+
+      function drawCirle(radius = 10) {
+        const x = Math.random() * WIDTH
+
+        const y = Math.random() * HEIGHT
+
+        ctx.fillStyle = randomColor()
+
+        ctx.beginPath()
+
+        ctx.arc(x, y, radius, 0, Math.PI * 2)
+
+        ctx.fill()
+      }
+
+      function draw(count = 10000) {
+        for (let i = 0; i < count; i++) {
+          drawCirle()
+        }
+      }
+
+      function update() {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT)
+
+        draw()
+
+        requestAnimationFrame(update)
+      }
+
+      requestAnimationFrame(update)
+    </script>
+  </body>
+</html>
