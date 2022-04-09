@@ -3,8 +3,7 @@
 clock_t start, end;
 double duration;
 
-int fib(int n)
-{
+int fib(int n) {
   if (n <= 1)
   {
     return 1;

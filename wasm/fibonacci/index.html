@@ -8,23 +8,30 @@
   </head>
   <body>
     <script>
+
+      // wasm模块的运行测试
       fetch('./fib.wasm')
         .then((res) => {
           return res.arrayBuffer()
         })
         .then(WebAssembly.instantiate)
         .then((module) => {
-          const start = performance.now()
-          let res = module.instance.exports.fib(45)
-          let end = performance.now()
-          console.log(res)
-          console.log(`fib(${20})---`, `${(end - start).toFixed(2)} ms`)
-        })
+          
+          [20, 40, 45].forEach(n => {
+            const start = performance.now();
+            module.instance.exports.fib(45);
+            const end = performance.now();
+          });
+        });
+
 
       function fib(n) {
         if (n < 2) return 1
         return fib(n - 2) + fib(n - 1)
       }
+
+                console.log(res)
+          console.log(`fib(${20})---`, `${(end - start).toFixed(2)} ms`)
       const start = performance.now()
       console.log(fib(45))
       const end = performance.now()
