@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input id="v1" type="file" onchange="changeFile(this)">
+    <!-- <video id="v1" controls="controls" autoplay="autoplay" src="/Users/bytedance/Desktop/h265.mp4"></video> -->
+    <!-- <video id="v2" controls="controls" autoplay="autoplay" src="/Users/bytedance/Desktop/trailer.mp4"></video> -->
+</body>
+<script>
+
+    let worker;
+    const changeFile = (files) => {
+        // console.log(file.files[0])
+        // const f = file.files[0];
+        // const blob = new Blob([f]);
+        // console.log(blob)
+        // const url = URL.createObjectURL(blob);
+        // console.log(url)
+        // worker = new Worker(url);
+        // worker.onmessage((e) => {
+        //     console.log(e, 'ggg')
+        // })
+        const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice
+        const file = files.files[0]
+        const fileReader = new FileReader()
+        const worker = new Worker('worker.js')
+        let timeStart = 0
+
+        /*fileReader读取完成，传递给worker*/
+        fileReader.onload = function(e){
+            console.log('gg')
+            worker.postMessage({
+                operation:'sendArrayBuffer',
+                ccccc:e.target.result,
+                threshold:0.8,
+                finish:true
+            },[e.target.result])
+        }
+        fileReader.onerror = function(){
+            console.log('文件读取失败，请重试');
+        }
+
+        /*worker线程计算MD5完成并返回结果*/
+        worker.onmessage = function(event){
+            console.log('total time: ',(new Date()).getTime()-timeStart)
+        }
+
+        /*使用FileReader读取文件*/
+        fileReader.readAsArrayBuffer(blobSlice.call(file,0,file.size))
+        timeStart = (new Date()).getTime()
+    }
+    // const blob = new Blob([document.getElementById('v1').textContent()]);
+    // const url = window.URL.createObjectURL(blob);
+    // const worker = new Worker(url);
+
+    
+</script>
+</html>
