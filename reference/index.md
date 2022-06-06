@@ -31,3 +31,9 @@ https://www.its.bldrdoc.gov/vqeg/video-datasets-and-organizations.aspx 测试视
 
 
 http://leixiaohua1020.github.io/#ffmpeg-development-examples  Examples on how to programmatically use libraries:
+
+
+
+https://slhck.info/video/2017/02/24/crf-guide.html CRF Guild （about some test pictures)
+
+the https://slhck.info like a person's blog.
