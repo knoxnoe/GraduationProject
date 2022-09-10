@@ -1,0 +1,24 @@
+@import '../../../styles/global';
+
+.custom_node__wrapper {
+  position: relative;
+
+  &:hover {
+    .custom_node__delete {
+      top: 5px;
+    }
+  }
+
+  .custom_node__delete {
+    transition: all 0.25s ease-in-out;
+    background-color: antiquewhite;
+    width: 100%;
+    height: 26px;
+    position: relative;
+    border-radius: 0.2em 0.2em 0 0;
+    top: 25px;
+    cursor: pointer;
+    color: @error;
+    text-align: center;
+  }
+}

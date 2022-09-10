@@ -1,0 +1,14 @@
+{
+  //"extends": ["next/babel","next/core-web-vitals"],
+  "extends": ["plugin:prettier/recommended"],
+  // "parser": "@typescript-eslint/parser",
+  "plugins": ["prettier"],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "arrow-body-style": "off",
+    "prefer-arrow-callback": "off"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "private": true,
+  "scripts": {
+    "start": "umi dev",
+    "build": "umi build",
+    "postinstall": "umi generate tmp",
+    "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
+    "test": "umi-test",
+    "test:coverage": "umi-test --coverage"
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,less,md,json}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --parser=typescript --write"
+    ]
+  },
+  "dependencies": {
+    "@ant-design/pro-layout": "^6.5.0",
+    "@ffmpeg/core": "^0.8.3",
+    "@ffmpeg/ffmpeg": "^0.9.4",
+    "react": "17.x",
+    "react-dom": "17.x",
+    "umi": "^3.5.28",
+    "worker-loader": "^3.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.6",
+    "@typescript-eslint/parser": "^5.30.6",
+    "@umijs/preset-react": "1.x",
+    "@umijs/test": "^3.5.28",
+    "copy-webpack-plugin": "^11.0.0",
+    "eslint": "^8.19.0",
+    "eslint-plugin-react": "^7.30.1",
+    "lint-staged": "^10.0.7",
+    "prettier": "^2.2.0",
+    "typescript": "^4.1.2",
+    "yorkie": "^2.0.0"
+  }
+}

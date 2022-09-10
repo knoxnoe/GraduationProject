@@ -1,0 +1,38 @@
+.edit_manage {
+  display: flex;
+  height: 100%;
+
+  :global(.react-flow__attribution) {
+    display: none;
+  }
+
+  .flow_wrapper {
+    height: 100%;
+    // width: 95%;
+    flex-grow: 3;
+    border: 1px solid #000;
+  }
+}
+
+.node_provider {
+  width: 220px;
+  padding: 0px 8px;
+  border: 1px solid #ddd;
+
+  .flow_node {
+    height: 50px;
+    width: 100%;
+    margin-top: 8px;
+    cursor: move;
+    background-color: aquamarine;
+    border-radius: 1em;
+    font-weight: 700;
+    line-height: 50px;
+    text-align: center;
+  }
+
+  .input_node {
+    width: 100px;
+    background-color: burlywood;
+  }
+}
