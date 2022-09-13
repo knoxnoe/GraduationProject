@@ -1,18 +1,18 @@
 import { DeleteOutlined } from '@ant-design/icons';
 import { FC, ReactNode } from 'react';
 import { Handle, NodeProps, Position } from 'react-flow-renderer';
+import { INodeData } from '..';
 import styles from './node.module.less';
-// export type NodeProps = HandleProps & {
-//   data: any;
-// };
-interface IProps {
+
+export type NodeWithData = NodeProps<INodeData>;
+interface IProps extends NodeWithData {
   children: ReactNode;
   targetHandle?: boolean;
   sourceHandle?: boolean;
 }
 
 const BasicNode: FC<IProps> = (props) => {
-  const { children, targetHandle = true, sourceHandle = true } = props;
+  const { children, targetHandle = true, sourceHandle = true, data } = props;
   return (
     <>
       {targetHandle && (
@@ -23,7 +23,7 @@ const BasicNode: FC<IProps> = (props) => {
       )}
       <div className={styles.custom_node__wrapper}>
         <div className={styles.custom_node__delete}>
-          <DeleteOutlined color="red" />
+          <DeleteOutlined color="red" onClick={() => data.onDelete(props.id)} />
         </div>
         {children}
       </div>

@@ -1,15 +1,17 @@
 import { Button, Descriptions, Drawer } from 'antd';
-import { FC, useCallback, useMemo, useState } from 'react';
-import { Handle, HandleProps, NodeProps, Position } from 'react-flow-renderer';
+import { FC, useMemo, useState } from 'react';
 import { useFileStore } from 'states/store';
-import BasicNode from './node';
+import BasicNode, { NodeWithData } from './node';
 
-const InputNode: FC<NodeProps> = (props) => {
+const InputNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const [visible, setVisible] = useState(false);
   const files = useFileStore((state) => state.files);
 
-  const idx = useMemo(() => Number(data?.name?.split('_')[1] ?? 0), [data]);
+  const idx = useMemo(
+    () => Number(data?.resource_name?.split('_')[1] ?? 0),
+    [data]
+  );
   const curFile = useMemo(() => files?.[idx], [files, idx]);
 
   const showDrawer = () => {
@@ -18,19 +20,17 @@ const InputNode: FC<NodeProps> = (props) => {
     console.log(files);
   };
 
-  const onClose = () => {
-    setVisible(false);
-  };
-
   return (
     <>
-      <BasicNode targetHandle={false}>
-        <Button onClick={() => showDrawer()}>{data.name ?? data.label}</Button>
+      <BasicNode {...props} targetHandle={false}>
+        <Button onClick={() => showDrawer()}>
+          {data.resource_name ?? data.label}
+        </Button>
         <Drawer
           title="输入信息"
           size="large"
           placement="right"
-          onClose={onClose}
+          onClose={() => setVisible(false)}
           visible={visible}
         >
           <Descriptions

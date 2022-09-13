@@ -10,8 +10,7 @@ import {
   TimePicker,
 } from 'antd';
 import { FC, useState } from 'react';
-import { NodeProps } from 'react-flow-renderer';
-import BasicNode from './node';
+import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
 //ffmpeg -i input1.mp4 -i input2.mp4 -i input3.mp4 -lavfi hstack=inputs=3 output.mp4
@@ -32,23 +31,15 @@ const ExtracType = [
   // { label: '抽取YUV画面', value: EXTRACT_TYPE.ExtractYUV },
 ];
 
-const ExtractNode: FC<NodeProps> = (props) => {
+const ExtractNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const [$form] = Form.useForm();
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
 
   const [flags, setFlags] = useState({
     time_range: false,
     screen_params: false,
   });
-
-  const showDrawer = () => {
-    setVisible(true);
-  };
-
-  const onClose = () => {
-    setVisible(false);
-  };
 
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
@@ -56,13 +47,13 @@ const ExtractNode: FC<NodeProps> = (props) => {
 
   return (
     <>
-      <BasicNode>
-        <Button onClick={() => showDrawer()}>{data.label}</Button>
+      <BasicNode {...props}>
+        <Button onClick={() => setVisible(true)}>{data.label}</Button>
         <Drawer
           title="抽取参数"
           placement="right"
           size="large"
-          onClose={onClose}
+          onClose={() => setVisible(false)}
           visible={visible}
           extra={
             <Button type="primary" onClick={() => $form.submit()}>

@@ -9,7 +9,7 @@ import {
 } from 'antd';
 import { FC, useState } from 'react';
 import { NodeProps } from 'react-flow-renderer';
-import BasicNode from './node';
+import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
 //ffmpeg -i input1.mp4 -i input2.mp4 -i input3.mp4 -lavfi hstack=inputs=3 output.mp4
@@ -21,7 +21,7 @@ const merge_type = [
   { label: '网格合并', value: 'grid_merge' },
 ];
 
-const MergeNode: FC<NodeProps> = (props) => {
+const MergeNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const [$form] = Form.useForm();
   const [visible, setVisible] = useState(false);
@@ -37,7 +37,7 @@ const MergeNode: FC<NodeProps> = (props) => {
 
   return (
     <>
-      <BasicNode>
+      <BasicNode {...props}>
         <Button onClick={() => setVisible(true)}>{data.label}</Button>
         <Drawer
           title="合并参数"

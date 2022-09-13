@@ -1,30 +1,34 @@
+import { RESOURCE_PREFIX } from '@/constants/order';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { Button } from 'antd';
 import {
-  useState,
-  useEffect,
-  SetStateAction,
   Dispatch,
-  forwardRef,
-  useImperativeHandle,
+  SetStateAction,
   useCallback,
+  useEffect,
   useRef,
+  useState,
 } from 'react';
 import ReactFlow, {
-  ReactFlowProvider,
-  MiniMap,
-  Controls,
-  applyNodeChanges,
-  applyEdgeChanges,
   addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
   Background,
-  updateEdge,
-  MarkerType,
+  Connection,
+  Controls,
+  Edge,
+  EdgeChange,
+  MiniMap,
+  Node,
+  NodeChange,
   ReactFlowInstance,
+  ReactFlowProvider,
+  updateEdge,
 } from 'react-flow-renderer';
-import NodeProvider from './nodesProvider';
+import { useDAGStore } from '../../states/store';
+import { EditNodeTypes } from './constants';
 import styles from './index.module.less';
-import { EditNodeTypes, EditNodeType } from './constants';
+import NodeProvider from './nodesProvider';
 
 interface IProps {
   ffmpegCli: FFmpeg | null;
@@ -39,62 +43,59 @@ interface Option {
   children?: Option[];
 }
 
-type IData = {
+export interface INodeData {
   // 节点显示名称
   label: string;
   // 节点参数信息 form.getFieldsValue
-  params: any;
+  params: Record<string, any>;
   // 节点构造出来的命令
-  command: string;
-  // 临时文件名
-  temp_name: string;
-};
+  command: string | undefined;
+  // 资源名称
+  resource_name: string;
+  // 删除节点
+  onDelete: (id: string) => void;
+}
 
-const initialNodes = Object.entries(EditNodeType).map(([k, v], idx) => ({
-  id: `${idx}`,
-  type: k,
-  data: { label: v.label },
-  position: { x: 200 * idx, y: 350 },
-}));
+export interface IEdgeData {}
 
-const initialEdges = [
-  {
-    id: 'e1-2',
-    source: '1',
-    target: '2',
-    label: 'styled label',
-    labelStyle: { fill: 'red', fontWeight: 700 },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-    },
-  },
-  { id: 'e2-3', source: '2', target: '3', animated: true },
-];
+export type AtomNode = Node<INodeData>;
+export type AtomEdge = Edge<IEdgeData>;
 
-let id = 0;
-const getId = () => `dndnode_${id++}`;
-
-const EditManage = forwardRef((props: IProps, ref) => {
+const EditManage = (props: IProps) => {
   const { ffmpegCli, setParameter, parameter, setStep } = props;
 
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState([]);
+  const getNewNodeId = useDAGStore((state) => state.getNewNodeId);
+  const init$DAG = useDAGStore((state) => state.init$DAG);
+
+  const [nodes, setNodes] = useState<AtomNode[]>([]);
+  const [edges, setEdges] = useState<AtomEdge[]>([]);
   const instanceWrapper = useRef<HTMLDivElement | null>(null);
-  const [DAGInstance, setReactFlowInstance] =
-    useState<ReactFlowInstance<any, any>>();
+  const [DAGInstance, setDAGInstance] =
+    useState<ReactFlowInstance<INodeData, IEdgeData>>();
   const edgeUpdateSuccessful = useRef(true);
 
+  useEffect(() => {
+    if (DAGInstance) {
+      init$DAG(DAGInstance);
+    }
+  }, [DAGInstance]);
+
   const onNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
+    (changes: NodeChange[]) =>
+      setNodes((nds) => applyNodeChanges(changes, nds)),
     [setNodes]
   );
   const onEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    (changes: EdgeChange[]) => {
+      console.log(changes);
+      setEdges((eds) => applyEdgeChanges(changes, eds));
+    },
     [setEdges]
   );
 
   const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    (connection: Edge<any> | Connection) =>
+      setEdges((eds) => addEdge(connection, eds)),
     [setEdges]
   );
 
@@ -103,42 +104,52 @@ const EditManage = forwardRef((props: IProps, ref) => {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const onDrop = useCallback(
-    (event: {
-      preventDefault: () => void;
-      dataTransfer: { getData: (arg0: string) => any };
-      clientX: number;
-      clientY: number;
-    }) => {
-      event.preventDefault();
+  const onNodeDelete = (node_id?: string) => {
+    const _nodes = DAGInstance?.getNodes();
+    setNodes([...(_nodes?.filter((node) => node.id !== node_id) ?? [])]);
+  };
 
-      if (DAGInstance) {
-        const reactFlowBounds =
-          instanceWrapper?.current?.getBoundingClientRect();
-        const type = event.dataTransfer.getData('node/type');
-        const name = event.dataTransfer.getData('node/name');
+  const createNode = (type, position) => {
+    const unique_id = getNewNodeId();
+    const newNode: AtomNode = {
+      id: unique_id,
+      type,
+      position,
+      data: {
+        label: `${type} NODE`,
+        resource_name: `${RESOURCE_PREFIX}${unique_id}`,
+        params: {},
+        command: undefined,
+        onDelete: onNodeDelete,
+      },
+    };
+    setNodes((nds) => nds.concat(newNode));
+  };
 
-        // check if the dropped element is valid
-        if (typeof type === 'undefined' || !type) {
-          return;
-        }
+  const onDrop = (event: {
+    preventDefault: () => void;
+    dataTransfer: { getData: (arg0: string) => any };
+    clientX: number;
+    clientY: number;
+  }) => {
+    event.preventDefault();
 
-        const position = DAGInstance.project({
-          x: event.clientX - (reactFlowBounds?.left ?? 0),
-          y: event.clientY - (reactFlowBounds?.top ?? 0),
-        });
-        const newNode = {
-          id: getId(),
-          type,
-          position,
-          data: { label: `${type} node`, name: name },
-        };
+    if (DAGInstance) {
+      const reactFlowBounds = instanceWrapper?.current?.getBoundingClientRect();
+      const type = event.dataTransfer.getData('node/type');
 
-        setNodes((nds) => nds.concat(newNode));
+      // check if the dropped element is valid
+      if (typeof type === 'undefined' || !type) {
+        return;
       }
-    },
-    [DAGInstance]
-  );
+
+      const position = DAGInstance.project({
+        x: event.clientX - (reactFlowBounds?.left ?? 0),
+        y: event.clientY - (reactFlowBounds?.top ?? 0),
+      });
+      createNode(type, position);
+    }
+  };
 
   const onEdgeUpdateStart = useCallback(() => {
     edgeUpdateSuccessful.current = false;
@@ -146,6 +157,7 @@ const EditManage = forwardRef((props: IProps, ref) => {
 
   const onEdgeUpdate = useCallback((oldEdge, newConnection) => {
     edgeUpdateSuccessful.current = true;
+    console.log(oldEdge, newConnection);
     setEdges((els) => updateEdge(oldEdge, newConnection, els));
   }, []);
 
@@ -153,13 +165,22 @@ const EditManage = forwardRef((props: IProps, ref) => {
     if (!edgeUpdateSuccessful.current) {
       setEdges((eds) => eds.filter((e) => e.id !== edge.id));
     }
-
     edgeUpdateSuccessful.current = true;
   }, []);
+
+  const coreRun = () => {};
 
   return (
     <>
       <div className={styles.edit_manage}>
+        <Button
+          onClick={() => {
+            console.log(DAGInstance?.getEdges());
+            console.log(DAGInstance?.getNodes());
+          }}
+        >
+          get All
+        </Button>
         <ReactFlowProvider>
           <div className={styles.flow_wrapper} ref={instanceWrapper}>
             <ReactFlow
@@ -167,11 +188,12 @@ const EditManage = forwardRef((props: IProps, ref) => {
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
+              onNodesDelete={(nodes) => console.log('onNodesDelete', nodes)}
               onEdgeUpdate={onEdgeUpdate}
               onEdgeUpdateStart={onEdgeUpdateStart}
               onEdgeUpdateEnd={onEdgeUpdateEnd}
               onConnect={onConnect}
-              onInit={(instance) => setReactFlowInstance(instance)}
+              onInit={(instance) => setDAGInstance(instance)}
               onDrop={onDrop}
               onDragOver={onDragOver}
               nodeTypes={EditNodeTypes}
@@ -190,12 +212,12 @@ const EditManage = forwardRef((props: IProps, ref) => {
         <Button style={{ margin: '8px 8px' }} onClick={() => setStep(0)}>
           上一步
         </Button>
-        <Button type="primary" onClick={() => {}}>
+        <Button type="primary" onClick={() => coreRun()}>
           处理
         </Button>
       </div>
     </>
   );
-});
+};
 
 export default EditManage;

@@ -1,11 +1,11 @@
 import { Button, Drawer, Form, Input } from 'antd';
 import { FC, useState } from 'react';
 import { NodeProps } from 'react-flow-renderer';
-import BasicNode from './node';
+import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
 
-const OutputNode: FC<NodeProps> = (props) => {
+const OutputNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const { label } = data;
   const [visible, setVisible] = useState(false);
@@ -17,7 +17,7 @@ const OutputNode: FC<NodeProps> = (props) => {
 
   return (
     <>
-      <BasicNode sourceHandle={false}>
+      <BasicNode sourceHandle={false} {...props}>
         <Button onClick={() => setVisible(true)}>{label}</Button>
         <Drawer
           title="资源文件输出定义"

@@ -10,11 +10,9 @@ const NodeProvider = () => {
 
   const onDragStart = (
     event: DragEvent<HTMLDivElement>,
-    nodeType: EDIT_NODE_TYPE,
-    source_name?: string
+    nodeType: EDIT_NODE_TYPE
   ) => {
     event.dataTransfer.setData('node/type', nodeType);
-    source_name && event.dataTransfer.setData('node/name', source_name);
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -27,13 +25,7 @@ const NodeProvider = () => {
           <div
             key={idx}
             className={`${styles.flow_node} ${styles.input_node}`}
-            onDragStart={(event) =>
-              onDragStart(
-                event,
-                EDIT_NODE_TYPE.Input,
-                `${RESOURCE_PREFIX}${idx}`
-              )
-            }
+            onDragStart={(event) => onDragStart(event, EDIT_NODE_TYPE.Input)}
             draggable
           >
             {`${RESOURCE_PREFIX}${idx}`}

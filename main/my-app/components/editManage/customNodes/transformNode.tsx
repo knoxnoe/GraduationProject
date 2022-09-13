@@ -8,8 +8,7 @@ import {
   TimePicker,
 } from 'antd';
 import { FC, useState } from 'react';
-import { NodeProps } from 'react-flow-renderer';
-import BasicNode from './node';
+import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
 
@@ -23,7 +22,7 @@ const TansformType = [
   { label: '格式转换', value: TRANSFORM_TYPE.Format },
 ];
 
-const TransformNode: FC<NodeProps> = (props) => {
+const TransformNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const [$form] = Form.useForm();
   const [visible, setVisible] = useState(false);
@@ -35,11 +34,12 @@ const TransformNode: FC<NodeProps> = (props) => {
 
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
+    data.params = values;
   };
 
   return (
     <>
-      <BasicNode>
+      <BasicNode {...props}>
         <Button onClick={() => setVisible(true)}>{data.label}</Button>
         <Drawer
           title="转换参数"

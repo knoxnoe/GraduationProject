@@ -63,3 +63,24 @@ export const EditNodeTypes = {
   [EDIT_NODE_TYPE.Input]: InputNode,
   [EDIT_NODE_TYPE.Output]: OutputNode,
 };
+
+const initialNodes = Object.entries(EditNodeType).map(([k, v], idx) => ({
+  id: `${idx}`,
+  type: k,
+  data: { label: v.label },
+  position: { x: 200 * idx, y: 350 },
+}));
+
+const initialEdges = [
+  {
+    id: 'e1-2',
+    source: '1',
+    target: '2',
+    label: 'styled label',
+    labelStyle: { fill: 'red', fontWeight: 700 },
+    // markerEnd: {
+    //   type: MarkerType.ArrowClosed,
+    // },
+  },
+  { id: 'e2-3', source: '2', target: '3', animated: true },
+];

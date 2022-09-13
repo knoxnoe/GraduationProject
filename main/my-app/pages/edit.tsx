@@ -8,7 +8,7 @@ import Result from '@/components/result';
 const { Step } = Steps;
 
 const Edit = () => {
-  const [curStep, setCurStep] = useState(0);
+  const [curStep, setCurStep] = useState(1);
   const [fileList, setFileList] = useState<UploadFile<any>[]>();
 
   const paramsRef = useRef<{ parameterForm: FormInstance<any> }>();
@@ -113,7 +113,7 @@ const Edit = () => {
           ffmpegCli={ffmpegCli.current}
           parameter={parameter}
           setParameter={setParameter}
-          ref={paramsRef}
+          // ref={paramsRef}
           setStep={setCurStep}
         ></EditManage>
       ),
@@ -136,7 +136,13 @@ const Edit = () => {
           <Step key={item.title} title={item.title} />
         ))}
       </Steps>
-      <div style={{ padding: '8px 0px', height: 'calc(100vh - 170px)' }}>
+      <div
+        style={{
+          padding: '8px 0px',
+          height: 'calc(100vh - 170px)',
+          minHeight: 650,
+        }}
+      >
         {steps[curStep].content}
       </div>
     </div>

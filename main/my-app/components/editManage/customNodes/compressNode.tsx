@@ -1,11 +1,10 @@
 import { Button, Drawer, Form, InputNumber, Radio, TimePicker } from 'antd';
 import { FC, useState } from 'react';
-import { NodeProps } from 'react-flow-renderer';
-import BasicNode from './node';
+import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
 
-const CompressNode: FC<NodeProps> = (props) => {
+const CompressNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const [$form] = Form.useForm();
   const [visible, setVisible] = useState(false);
@@ -17,6 +16,7 @@ const CompressNode: FC<NodeProps> = (props) => {
 
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
+    data.params = values;
   };
 
   return (
