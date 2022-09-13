@@ -1,13 +1,12 @@
-import { EDIT_NODE_TYPE } from '@/components/editManage/constants';
-import { UploadFile } from 'antd';
-import create from 'zustand';
 import {
-  AtomNode,
   AtomEdge,
-  INodeData,
+  AtomNode,
   IEdgeData,
+  INodeData,
 } from '@/components/editManage/index';
+import { UploadFile } from 'antd';
 import { ReactFlowInstance } from 'react-flow-renderer';
+import create from 'zustand';
 
 interface IDAGStore {
   nodeId: number;
@@ -15,7 +14,7 @@ interface IDAGStore {
   nodes: AtomNode[];
   edges: AtomEdge[];
   init$DAG: (instance: ReactFlowInstance<INodeData, IEdgeData>) => void;
-  getNewNodeId: () => string;
+  createUniqueNodeID: () => string;
 }
 
 export const useDAGStore = create<IDAGStore>()((set, get) => ({
@@ -24,7 +23,8 @@ export const useDAGStore = create<IDAGStore>()((set, get) => ({
   nodes: [],
   edges: [],
   init$DAG: (instance) => set((state) => ({ $DAG: instance })),
-  getNewNodeId: () => {
+  // 创建一个唯一的node id
+  createUniqueNodeID: () => {
     set((state) => ({ nodeId: state.nodeId + 1 }));
     return `${get().nodeId}`;
   },

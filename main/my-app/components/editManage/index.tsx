@@ -1,8 +1,10 @@
 import { RESOURCE_PREFIX } from '@/constants/order';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import {
   Dispatch,
+  DragEvent,
+  MouseEvent,
   SetStateAction,
   useCallback,
   useEffect,
@@ -24,9 +26,10 @@ import ReactFlow, {
   ReactFlowInstance,
   ReactFlowProvider,
   updateEdge,
+  XYPosition,
 } from 'react-flow-renderer';
 import { useDAGStore } from '../../states/store';
-import { EditNodeTypes } from './constants';
+import { EditNodeTypes, EDIT_NODE_TYPE } from './constants';
 import styles from './index.module.less';
 import NodeProvider from './nodesProvider';
 
@@ -52,6 +55,10 @@ export interface INodeData {
   command: string | undefined;
   // 资源名称
   resource_name: string;
+  // next 节点
+  nextIds: string[] | null;
+  // prev 节点
+  prevIds: string[] | null;
   // 删除节点
   onDelete: (id: string) => void;
 }
@@ -64,7 +71,7 @@ export type AtomEdge = Edge<IEdgeData>;
 const EditManage = (props: IProps) => {
   const { ffmpegCli, setParameter, parameter, setStep } = props;
 
-  const getNewNodeId = useDAGStore((state) => state.getNewNodeId);
+  const createUniqueNodeID = useDAGStore((state) => state.createUniqueNodeID);
   const init$DAG = useDAGStore((state) => state.init$DAG);
 
   const [nodes, setNodes] = useState<AtomNode[]>([]);
@@ -87,19 +94,44 @@ const EditManage = (props: IProps) => {
   );
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      console.log(changes);
       setEdges((eds) => applyEdgeChanges(changes, eds));
     },
     [setEdges]
   );
 
   const onConnect = useCallback(
-    (connection: Edge<any> | Connection) =>
-      setEdges((eds) => addEdge(connection, eds)),
-    [setEdges]
+    (connection: Edge<any> | Connection) => {
+      console.log(connection);
+      updateNodeNextWithPrev(connection.source, connection.target);
+      setEdges((eds) => addEdge(connection, eds));
+    },
+    [setEdges, DAGInstance]
   );
 
-  const onDragOver = useCallback((event) => {
+  const updateNodeNextWithPrev = (
+    sourceId: string | null,
+    targetId: string | null,
+    add: boolean = true
+  ) => {
+    if (targetId && sourceId) {
+      let sourceData = DAGInstance?.getNode(sourceId)?.data;
+      let targetData = DAGInstance?.getNode(targetId)?.data;
+      console.log(sourceData, targetData);
+      if (sourceData && targetData) {
+        if (add) {
+          sourceData.nextIds?.push(targetId);
+          targetData.prevIds?.push(sourceId);
+        } else {
+          sourceData.nextIds =
+            sourceData.nextIds?.filter((id) => id !== targetId) ?? null;
+          targetData.prevIds =
+            targetData.prevIds?.filter((id) => id !== sourceId) ?? null;
+        }
+      }
+    }
+  };
+
+  const onDragOver = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
@@ -109,17 +141,19 @@ const EditManage = (props: IProps) => {
     setNodes([...(_nodes?.filter((node) => node.id !== node_id) ?? [])]);
   };
 
-  const createNode = (type, position) => {
-    const unique_id = getNewNodeId();
+  const createNode = (type: EDIT_NODE_TYPE, position: XYPosition) => {
+    const unique_id = createUniqueNodeID();
     const newNode: AtomNode = {
       id: unique_id,
       type,
       position,
       data: {
-        label: `${type} NODE`,
+        label: `${type} node`,
         resource_name: `${RESOURCE_PREFIX}${unique_id}`,
         params: {},
         command: undefined,
+        nextIds: type === EDIT_NODE_TYPE.Output ? null : [],
+        prevIds: type === EDIT_NODE_TYPE.Input ? null : [],
         onDelete: onNodeDelete,
       },
     };
@@ -155,20 +189,48 @@ const EditManage = (props: IProps) => {
     edgeUpdateSuccessful.current = false;
   }, []);
 
-  const onEdgeUpdate = useCallback((oldEdge, newConnection) => {
-    edgeUpdateSuccessful.current = true;
-    console.log(oldEdge, newConnection);
-    setEdges((els) => updateEdge(oldEdge, newConnection, els));
-  }, []);
+  const onEdgeUpdate = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      edgeUpdateSuccessful.current = true;
+      console.log(oldEdge, newConnection);
+      setEdges((els) => updateEdge(oldEdge, newConnection, els));
+    },
+    []
+  );
 
-  const onEdgeUpdateEnd = useCallback((_, edge) => {
-    if (!edgeUpdateSuccessful.current) {
-      setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+  const onEdgeUpdateEnd = useCallback(
+    (_: MouseEvent, edge: Edge) => {
+      if (!edgeUpdateSuccessful.current) {
+        console.log(edge);
+        updateNodeNextWithPrev(edge.source, edge.target, false);
+        setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+      }
+      edgeUpdateSuccessful.current = true;
+    },
+    [DAGInstance]
+  );
+
+  const coreRun = () => {
+    const nodes = DAGInstance?.getNodes();
+    const edges = DAGInstance?.getEdges();
+
+    // 是否有输出和输入
+    let inId: string[] = [],
+      outId: string[] = [];
+    nodes?.forEach((n) => {
+      if (n.type === EDIT_NODE_TYPE.Input) {
+        inId.push(n.id);
+      }
+      if (n.type === EDIT_NODE_TYPE.Output) {
+        outId.push(n.id);
+      }
+    });
+    if (!inId.length || !outId.length) {
+      message.warn('检测任务图中是否存在输入、输出节点!');
     }
-    edgeUpdateSuccessful.current = true;
-  }, []);
 
-  const coreRun = () => {};
+    //
+  };
 
   return (
     <>
@@ -193,7 +255,10 @@ const EditManage = (props: IProps) => {
               onEdgeUpdateStart={onEdgeUpdateStart}
               onEdgeUpdateEnd={onEdgeUpdateEnd}
               onConnect={onConnect}
-              onInit={(instance) => setDAGInstance(instance)}
+              onInit={(instance) => {
+                console.log('cccc----------');
+                setDAGInstance(instance);
+              }}
               onDrop={onDrop}
               onDragOver={onDragOver}
               nodeTypes={EditNodeTypes}
