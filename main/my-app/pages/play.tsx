@@ -1,4 +1,4 @@
-import Player from '@/components/player';
+import MediaPlayer from '@/components/player';
 import { useEffect, useRef } from 'react';
 
 const Play = () => {
@@ -17,9 +17,9 @@ const Play = () => {
   }, []);
 
   return (
-    <div>
-      <Player></Player>
-    </div>
+    <>
+      <MediaPlayer></MediaPlayer>
+    </>
   );
 };
 

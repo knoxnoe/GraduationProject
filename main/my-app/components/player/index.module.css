@@ -1,0 +1,16 @@
+.media_player {
+  height: 65px;
+}
+.media_player :global(.ant-upload.ant-upload-drag .ant-upload-drag-container) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.media_player .upload_drag__icon {
+  margin-bottom: 0;
+  font-size: 24px;
+}
+.media_player .upload_text {
+  font-size: 14px;
+  margin-left: 8px;
+}
