@@ -23,9 +23,7 @@ const InputNode: FC<NodeWithData> = (props) => {
   return (
     <>
       <BasicNode {...props} targetHandle={false}>
-        <Button onClick={() => showDrawer()}>
-          {data.resource_name ?? data.label}
-        </Button>
+        <Button onClick={() => showDrawer()}>{data.label}</Button>
         <Drawer
           title="输入信息"
           size="large"

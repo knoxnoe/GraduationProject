@@ -64,6 +64,14 @@ export const EditNodeTypes = {
   [EDIT_NODE_TYPE.Output]: OutputNode,
 };
 
+export enum NODE_STATUS {
+  Init = 'init',
+  Wait = 'wait',
+  OnGoing = 'ongoing',
+  Success = 'success',
+  Error = 'error',
+}
+
 const initialNodes = Object.entries(EditNodeType).map(([k, v], idx) => ({
   id: `${idx}`,
   type: k,

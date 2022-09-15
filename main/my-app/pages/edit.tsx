@@ -1,14 +1,14 @@
-import { Button, FormInstance, Steps, UploadFile } from 'antd';
-import { useState, useEffect, useRef } from 'react';
-import FileReader from '@/components/fileReader';
-import { createFFmpeg, fetchFile, FFmpeg } from '@ffmpeg/ffmpeg';
 import EditManage from '@/components/editManage';
+import FileReader from '@/components/fileReader';
 import Result from '@/components/result';
+import { createFFmpeg, FFmpeg } from '@ffmpeg/ffmpeg';
+import { FormInstance, Steps, UploadFile } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 
 const { Step } = Steps;
 
 const Edit = () => {
-  const [curStep, setCurStep] = useState(1);
+  const [curStep, setCurStep] = useState(0);
   const [fileList, setFileList] = useState<UploadFile<any>[]>();
 
   const paramsRef = useRef<{ parameterForm: FormInstance<any> }>();

@@ -15,3 +15,4 @@ export const videoType = [
 ];
 
 export const RESOURCE_PREFIX = 'resource_';
+export const ORIGIN_RESOURCE_PREFIX = 'originResource_';

@@ -1,18 +1,16 @@
+import { ORIGIN_RESOURCE_PREFIX, RESOURCE_PREFIX } from '@/constants/order';
 import { InboxOutlined } from '@ant-design/icons';
 import { fetchFile, FFmpeg } from '@ffmpeg/ffmpeg';
-import { Button, message, Spin, Tag, Tooltip, UploadFile } from 'antd';
-import { Upload } from 'antd';
-import React, {
+import { Button, message, Spin, Tag, Tooltip, Upload, UploadFile } from 'antd';
+import {
   Dispatch,
   FC,
   MutableRefObject,
   SetStateAction,
-  useRef,
+  useEffect,
   useState,
 } from 'react';
 import { useFileStore } from 'states/store';
-import { useEffect } from 'react';
-import { RESOURCE_PREFIX } from '@/constants/order';
 
 const { Dragger } = Upload;
 interface IProps {
@@ -22,9 +20,7 @@ interface IProps {
 }
 
 const FileReader: FC<IProps> = (props) => {
-  console.log('filereader render');
   const { isLoadedFFmpeg, ffmpegCli, setStep } = props;
-
   const files = useFileStore((state) => state.files);
   const updateFiles = useFileStore((state) => state.updateFiles);
 
@@ -58,7 +54,7 @@ const FileReader: FC<IProps> = (props) => {
     fileList?.forEach(async (file, idx) => {
       ffmpegCli.current?.FS(
         'writeFile',
-        `${RESOURCE_PREFIX}${idx}`,
+        `${ORIGIN_RESOURCE_PREFIX}${idx}`,
         await fetchFile(file.originFileObj as File)
       );
     });

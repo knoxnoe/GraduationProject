@@ -18,7 +18,7 @@ interface IDAGStore {
 }
 
 export const useDAGStore = create<IDAGStore>()((set, get) => ({
-  nodeId: 0,
+  nodeId: -1,
   $DAG: null,
   nodes: [],
   edges: [],

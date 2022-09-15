@@ -1,13 +1,18 @@
 import { Button, Drawer, Form, InputNumber, Radio, TimePicker } from 'antd';
+import moment from 'moment';
 import { FC, useState } from 'react';
+import { useDAGStore } from 'states/store';
 import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
+// ffmpeg -i "input.mp4" -vcodec copy -acodec copy -ss 00:00:00 -t 00:06:33  "output.mp4"
+// ffmpeg -ss 00:00:03 -i inputVideo.mp4 -to 00:00:08 -c:v copy -c:a copy  trim_ipseek_copy.mp4
 
 const CutNode: FC<NodeWithData> = (props) => {
   const { data } = props;
   const [$form] = Form.useForm();
   const [visible, setVisible] = useState(false);
+  const $DAG = useDAGStore((state) => state.$DAG);
 
   const [flags, setFlags] = useState({
     time_range: false,
@@ -17,6 +22,15 @@ const CutNode: FC<NodeWithData> = (props) => {
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
     data.params = values;
+
+    if (values.range) {
+      let start = moment(values.range[0]).format('HH:mm:ss');
+      let end = moment(values.range[1]).format('HH:mm:ss');
+
+      const prevNode = $DAG?.getNode(data.prevIds?.[0] as string);
+
+      data.command = `ffmpegCli.run('-ss', '${start}', '-i', '${prevNode?.data.resource_name}', '-to', '${end}', '-c:v', 'copy', '-c:a', 'copy', '${data.resource_name}.mp4')`;
+    }
   };
 
   return (

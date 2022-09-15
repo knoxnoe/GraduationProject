@@ -25,7 +25,6 @@
 .node_provider {
   width: 220px;
   padding: 0px 8px;
-  overflow: scroll;
   border: 1px solid #ddd;
 }
 .node_provider .flow_node {

@@ -4,7 +4,6 @@ import { Button, message } from 'antd';
 import {
   Dispatch,
   DragEvent,
-  MouseEvent,
   SetStateAction,
   useCallback,
   useEffect,
@@ -26,10 +25,9 @@ import ReactFlow, {
   ReactFlowInstance,
   ReactFlowProvider,
   updateEdge,
-  XYPosition,
 } from 'react-flow-renderer';
 import { useDAGStore } from '../../states/store';
-import { EditNodeTypes, EDIT_NODE_TYPE } from './constants';
+import { EditNodeTypes, EDIT_NODE_TYPE, NODE_STATUS } from './constants';
 import styles from './index.module.less';
 import NodeProvider from './nodesProvider';
 
@@ -55,6 +53,8 @@ export interface INodeData {
   command: string | undefined;
   // 资源名称
   resource_name: string;
+  // 节点状态
+  status: NODE_STATUS;
   // next 节点
   nextIds: string[] | null;
   // prev 节点
@@ -101,7 +101,6 @@ const EditManage = (props: IProps) => {
 
   const onConnect = useCallback(
     (connection: Edge<any> | Connection) => {
-      console.log(connection);
       updateNodeNextWithPrev(connection.source, connection.target);
       setEdges((eds) => addEdge(connection, eds));
     },
@@ -116,7 +115,6 @@ const EditManage = (props: IProps) => {
     if (targetId && sourceId) {
       let sourceData = DAGInstance?.getNode(sourceId)?.data;
       let targetData = DAGInstance?.getNode(targetId)?.data;
-      console.log(sourceData, targetData);
       if (sourceData && targetData) {
         if (add) {
           sourceData.nextIds?.push(targetId);
@@ -141,25 +139,6 @@ const EditManage = (props: IProps) => {
     setNodes([...(_nodes?.filter((node) => node.id !== node_id) ?? [])]);
   };
 
-  const createNode = (type: EDIT_NODE_TYPE, position: XYPosition) => {
-    const unique_id = createUniqueNodeID();
-    const newNode: AtomNode = {
-      id: unique_id,
-      type,
-      position,
-      data: {
-        label: `${type} node`,
-        resource_name: `${RESOURCE_PREFIX}${unique_id}`,
-        params: {},
-        command: undefined,
-        nextIds: type === EDIT_NODE_TYPE.Output ? null : [],
-        prevIds: type === EDIT_NODE_TYPE.Input ? null : [],
-        onDelete: onNodeDelete,
-      },
-    };
-    setNodes((nds) => nds.concat(newNode));
-  };
-
   const onDrop = (event: {
     preventDefault: () => void;
     dataTransfer: { getData: (arg0: string) => any };
@@ -171,6 +150,8 @@ const EditManage = (props: IProps) => {
     if (DAGInstance) {
       const reactFlowBounds = instanceWrapper?.current?.getBoundingClientRect();
       const type = event.dataTransfer.getData('node/type');
+      const label = event.dataTransfer.getData('node/label');
+      const resource_name = event.dataTransfer.getData('node/resource_name');
 
       // check if the dropped element is valid
       if (typeof type === 'undefined' || !type) {
@@ -181,7 +162,27 @@ const EditManage = (props: IProps) => {
         x: event.clientX - (reactFlowBounds?.left ?? 0),
         y: event.clientY - (reactFlowBounds?.top ?? 0),
       });
-      createNode(type, position);
+
+      const unique_id = createUniqueNodeID();
+      const newNode: AtomNode = {
+        id: unique_id,
+        type,
+        position,
+        data: {
+          label: label,
+          resource_name:
+            type === EDIT_NODE_TYPE.Input
+              ? resource_name
+              : `${RESOURCE_PREFIX}${unique_id}`,
+          params: {},
+          command: undefined,
+          status: NODE_STATUS.Init,
+          nextIds: type === EDIT_NODE_TYPE.Output ? null : [],
+          prevIds: type === EDIT_NODE_TYPE.Input ? null : [],
+          onDelete: onNodeDelete,
+        },
+      };
+      setNodes((nds) => nds.concat(newNode));
     }
   };
 
@@ -192,7 +193,6 @@ const EditManage = (props: IProps) => {
   const onEdgeUpdate = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
       edgeUpdateSuccessful.current = true;
-      console.log(oldEdge, newConnection);
       setEdges((els) => updateEdge(oldEdge, newConnection, els));
     },
     []
@@ -201,7 +201,6 @@ const EditManage = (props: IProps) => {
   const onEdgeUpdateEnd = useCallback(
     (_: MouseEvent, edge: Edge) => {
       if (!edgeUpdateSuccessful.current) {
-        console.log(edge);
         updateNodeNextWithPrev(edge.source, edge.target, false);
         setEdges((eds) => eds.filter((e) => e.id !== edge.id));
       }
@@ -209,6 +208,43 @@ const EditManage = (props: IProps) => {
     },
     [DAGInstance]
   );
+
+  const handleNodeCommand = (node: Node<INodeData>): boolean => {
+    const prev_names: string[] = [];
+    const flag = node.data.prevIds?.every((id) => {
+      const curNode = DAGInstance?.getNode(id);
+      if (curNode?.data.status === NODE_STATUS.Success) {
+        prev_names.push(curNode.data.resource_name);
+        return true;
+      }
+      return false;
+    });
+
+    // 之前的节点未就绪
+    if (!flag) {
+      node.data.status = NODE_STATUS.Wait;
+      return false;
+    }
+
+    if (node.data.status === NODE_STATUS.Init) {
+      if (!node.data.command) {
+        message.warn('节点参数未编辑');
+        return false;
+      }
+
+      console.log(node.data.command);
+      //eval(node.data.command);
+
+      return true;
+      //ffmpegCli?.run();
+
+      // 干掉节点的产生的数据
+      // prev_names.forEach((name) => {
+      //   ffmpegCli?.FS('unlink', 'video.mp4');
+      // });
+    }
+    return true;
+  };
 
   const coreRun = () => {
     const nodes = DAGInstance?.getNodes();
@@ -230,6 +266,28 @@ const EditManage = (props: IProps) => {
     }
 
     //
+
+    const taskQueue = Array.from(inId);
+    while (taskQueue.length > 0) {
+      const curNodeId = taskQueue.shift();
+      if (curNodeId) {
+        const node = DAGInstance?.getNode(curNodeId);
+
+        if (node?.type === EDIT_NODE_TYPE.Input) {
+          taskQueue.push(...(node.data.nextIds as string[]));
+          node.data.status = NODE_STATUS.Success;
+          continue;
+        }
+
+        if (node?.type === EDIT_NODE_TYPE.Output) {
+          continue;
+        }
+
+        if (node && handleNodeCommand(node)) {
+          taskQueue.push(...(node.data.nextIds as string[]));
+        }
+      }
+    }
   };
 
   return (
@@ -255,10 +313,7 @@ const EditManage = (props: IProps) => {
               onEdgeUpdateStart={onEdgeUpdateStart}
               onEdgeUpdateEnd={onEdgeUpdateEnd}
               onConnect={onConnect}
-              onInit={(instance) => {
-                console.log('cccc----------');
-                setDAGInstance(instance);
-              }}
+              onInit={(instance) => setDAGInstance(instance)}
               onDrop={onDrop}
               onDragOver={onDragOver}
               nodeTypes={EditNodeTypes}

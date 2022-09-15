@@ -21,10 +21,10 @@ const CompressNode: FC<NodeWithData> = (props) => {
 
   return (
     <>
-      <BasicNode>
+      <BasicNode {...props}>
         <Button onClick={() => setVisible(true)}>{data.label}</Button>
         <Drawer
-          title="裁剪参数"
+          title="压缩参数"
           placement="right"
           size="large"
           onClose={() => setVisible(false)}

@@ -1,6 +1,5 @@
 import { Button, Drawer, Form, Input } from 'antd';
 import { FC, useState } from 'react';
-import { NodeProps } from 'react-flow-renderer';
 import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
@@ -13,6 +12,21 @@ const OutputNode: FC<NodeWithData> = (props) => {
 
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
+    data.params = values;
+  };
+
+  const downloadOutput = () => {
+    // const data = ffmpegCli.current.FS('readFile', `output.${parameter?.type}`);
+    // const url = URL.createObjectURL(
+    //   new Blob([data.buffer], { type: 'video/x-flv' })
+    // );
+    // let a = document.createElement('a');
+    // a.download = 'xxxx';
+    // a.style.display = 'none';
+    // a.href = url;
+    // document.body.appendChild(a);
+    // a.click();
+    // document.body.removeChild(a);
   };
 
   return (
@@ -25,6 +39,11 @@ const OutputNode: FC<NodeWithData> = (props) => {
           onClose={() => setVisible(false)}
           size="large"
           visible={visible}
+          extra={
+            <Button type="primary" onClick={() => $form.submit()}>
+              确认
+            </Button>
+          }
         >
           <Form
             name="basic"
@@ -42,6 +61,7 @@ const OutputNode: FC<NodeWithData> = (props) => {
               <Input></Input>
             </Item>
           </Form>
+          <Button onClick={() => downloadOutput()}>下载</Button>
         </Drawer>
       </BasicNode>
     </>
