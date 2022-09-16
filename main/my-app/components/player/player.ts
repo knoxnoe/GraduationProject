@@ -1,4 +1,4 @@
-import { Logger } from './common';
+import { Logger, READER_REQUEAST, READER_RESPONSE } from './common';
 
 enum DECODER_STATE {
   decoderStateIdle = 0,
@@ -78,23 +78,34 @@ export class Player {
 
   initReader = () => {
     this.reader.onmessage = (evt) => {
+      console.log(`WebWorker Response => ${evt.data}`);
       var objData = evt.data;
-      switch (
-        objData.t
-        // case kGetFileInfoRsp:
-        //   console.log(objData);
-        //   this.onGetFileInfo(objData.i);
-        //   break;
-        // case kFileData:
-        //   this.onFileData(objData.d, objData.s, objData.e, objData.q);
-        //   break;
-      ) {
+      switch (objData.t) {
+        case READER_RESPONSE.KGetFileInfoRsp:
+          this.onGetFileInfo(objData.i);
+          break;
+        case READER_RESPONSE.KReaderFileRsp:
+          this.onFileData(objData);
+          break;
       }
     };
   };
 
-  getMsg = function () {
-    console.log('get mesg');
+  onGetFileInfo = () => {};
+
+  onFileData = (...args) => {
+    console.log(args);
+  };
+
+  play = (file) => {
+    console.log(file);
+
+    this.reader.postMessage({
+      k: READER_REQUEAST.KReaderFileReq,
+      data: {
+        file: file,
+      },
+    });
   };
 
   // initDecodeWorker = function () {

@@ -14,6 +14,19 @@ export enum PLAYER_RESPONSE {
   kVideoData,
 }
 
+// Reader
+export enum READER_REQUEAST {
+  kGetFileInfoReq,
+  KReaderFileReq,
+  KCloseReaderReq,
+}
+
+export enum READER_RESPONSE {
+  KGetFileInfoRsp,
+  KReaderFileRsp,
+  KCloseReaderRsp,
+}
+
 //Downloader request.
 const kGetFileInfoReq = 0;
 const kDownloadFileReq = 1;

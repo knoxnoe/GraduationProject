@@ -1,5 +1,5 @@
 import { YoutubeOutlined } from '@ant-design/icons';
-import { Upload, UploadFile } from 'antd';
+import { Button, message, Upload, UploadFile } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import styles from './index.module.less';
 import { Player } from './player';
@@ -9,33 +9,27 @@ const { Dragger } = Upload;
 const MediaPlayer = () => {
   const readerWorker = useRef<Worker>();
   const decoderWorker = useRef<Worker>();
-  const $palyer = useRef<any>();
+  const $player = useRef<Player>();
 
-  const fileReader = useRef<FileReader>();
   const [file, setFile] = useState<UploadFile<any>>();
 
   useEffect(() => {
-    readerWorker.current = new Worker(new URL('./reader.ts', import.meta.url));
-    decoderWorker.current = new Worker(
-      new URL('./decoder.ts', import.meta.url)
+    readerWorker.current = new Worker(
+      new URL('./reader.worker.ts', import.meta.url)
     );
-    fileReader.current = new FileReader();
-
-    //readerWorker.current.postMessage(100000);
-
-    // readerWorker.current.onmessage = (evt) =>
-    //   console.log(`WebWorker Response => ${evt.data}`);
+    decoderWorker.current = new Worker(
+      new URL('./decoder.worker.ts', import.meta.url)
+    );
 
     return () => {
       readerWorker.current?.terminate();
       decoderWorker.current?.terminate();
-      fileReader.current = undefined;
     };
   }, []);
 
   useEffect(() => {
     if (readerWorker.current && decoderWorker.current) {
-      $palyer.current = new Player(readerWorker.current, decoderWorker.current);
+      $player.current = new Player(readerWorker.current, decoderWorker.current);
     }
   }, [readerWorker, decoderWorker]);
 
@@ -53,6 +47,18 @@ const MediaPlayer = () => {
         </p>
         <p className={styles.upload_text}>选取视频播放 go play</p>
       </Dragger>
+      <Button
+        onClick={() => {
+          if (!file) {
+            message.warn('请选择视频文件');
+            return;
+          }
+
+          $player.current?.play(file.originFileObj);
+        }}
+      >
+        读取文件
+      </Button>
     </div>
   );
 };
