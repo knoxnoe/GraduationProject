@@ -1,8 +1,5 @@
 import type { NextPage } from 'next';
-import Head from 'next/head';
-import Image from 'next/image';
-import { useCallback, useEffect, useRef } from 'react';
-import styles from '../styles/Home.module.css';
+import { useCallback, useRef } from 'react';
 
 const Home: NextPage = () => {
   const workerRef = useRef<Worker>({} as Worker);

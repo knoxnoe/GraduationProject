@@ -33,12 +33,17 @@ const MediaPlayer = () => {
     }
   }, [readerWorker, decoderWorker]);
 
+  useEffect(() => {
+    if (file?.originFileObj && file.status === 'done') {
+      $player.current?.initFileInfo(file.originFileObj);
+    }
+  }, [file]);
+
   return (
     <div className={styles.media_player}>
       <Dragger
         maxCount={1}
         onChange={({ file, fileList }) => {
-          console.log(file, fileList);
           setFile(file);
         }}
       >
@@ -49,7 +54,7 @@ const MediaPlayer = () => {
       </Dragger>
       <Button
         onClick={() => {
-          if (!file) {
+          if (!file?.originFileObj) {
             message.warn('请选择视频文件');
             return;
           }

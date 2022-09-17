@@ -73,31 +73,43 @@ export class Player {
     this.reader = reader;
     this.decoder = decoder;
     this.initReader();
-    //this.initDecodeWorker();
+    this.initDecoder();
   }
 
   initReader = () => {
     this.reader.onmessage = (evt) => {
-      console.log(`WebWorker Response => ${evt.data}`);
+      console.dir(evt);
       var objData = evt.data;
-      switch (objData.t) {
+      switch (objData.k) {
         case READER_RESPONSE.KGetFileInfoRsp:
           this.onGetFileInfo(objData.i);
           break;
         case READER_RESPONSE.KReaderFileRsp:
-          this.onFileData(objData);
+          this.onFileData(objData.data.raw_data);
           break;
       }
     };
   };
 
+  initDecoder = () => {};
+
   onGetFileInfo = () => {};
 
-  onFileData = (...args) => {
+  onFileData = (args) => {
     console.log(args);
+    this.decoder.postMessage('ggg-noe');
   };
 
-  play = (file) => {
+  initFileInfo = (file: File) => {
+    this.reader.postMessage({
+      k: READER_REQUEAST.kGetFileInfoReq,
+      data: {
+        file: file,
+      },
+    });
+  };
+
+  play = (file: File) => {
     console.log(file);
 
     this.reader.postMessage({
