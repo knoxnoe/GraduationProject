@@ -17,10 +17,13 @@ const MediaPlayer = () => {
 
   const trackRef = useRef<HTMLInputElement | null>(null);
   const timeLabelRef = useRef<HTMLSpanElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [file, setFile] = useState<UploadFile<any>>();
 
   const [playingState, setPlayingState] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     readerWorker.current = new Worker(
@@ -54,13 +57,18 @@ const MediaPlayer = () => {
       return;
     }
 
-    if (!trackRef.current || !timeLabelRef.current) {
+    if (!$player.current?.fileReady) {
+      message.warn('引擎正在初始化！');
+    }
+
+    if (!trackRef.current || !timeLabelRef.current || !canvasRef.current) {
       return;
     }
 
     $player.current?.play({
       file: file.originFileObj,
-      
+      canvas: canvasRef.current,
+      waitHeaderLength: 512 * 1024,
       timeTrack: trackRef.current,
       timeLabel: timeLabelRef.current,
     });
@@ -83,8 +91,13 @@ const MediaPlayer = () => {
       </Dragger>
 
       <div className={styles.player_container}>
-        <Spin tip="Loading..." spinning={true}>
-          <canvas id="playCanvas" width="852" height="480"></canvas>
+        <Spin tip="Loading..." spinning={loading}>
+          <canvas
+            id="playCanvas"
+            width="852"
+            height="480"
+            ref={canvasRef}
+          ></canvas>
         </Spin>
 
         <div className={styles.player_sidebar}>
@@ -96,12 +109,6 @@ const MediaPlayer = () => {
               type="range"
               step="0.1"
               defaultValue={0}
-              // onInput={(event) => {
-              //   console.log(1);
-              // }}
-              // onChange={(event) => {
-              //   console.log(2);
-              // }}
             />
           </div>
           <div style={{ height: 42, lineHeight: '42px' }}>

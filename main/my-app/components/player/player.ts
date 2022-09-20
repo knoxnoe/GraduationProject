@@ -50,9 +50,12 @@ class FileInfo {
 
 export class Player {
   fileInfo: FileInfo | null = null;
+  fileReady = false;
+
   pcmPlayer: PCMPlayer | null = null;
-  canvas = null;
+  canvas: HTMLCanvasElement | null = null;
   webglPlayer: WebGLPlayer | null = null;
+
   callback = null;
   waitHeaderLength = 524288;
   duration = 0;
@@ -72,7 +75,7 @@ export class Player {
   downloadTimer: NodeJS.Timer | null = null;
   chunkInterval = 200;
   downloadSeqNo = 0;
-  downloading = false;
+  reading = false;
   downloadProto = 'local';
 
   timeLabel: HTMLSpanElement | null = null;
@@ -124,6 +127,7 @@ export class Player {
   };
 
   // ------------------------- Reader message func start
+  // 初始化文件的response消息
   onGetFileInfo = ({
     type,
     size,
@@ -134,6 +138,7 @@ export class Player {
     chunkSize: number;
   }) => {
     this.fileInfo = new FileInfo({ size, type, chunkSize });
+    this.fileReady = true;
     this.decoder.postMessage({
       k: DECODER_REQUEST.kInitDecoderReq,
       data: {
@@ -145,7 +150,10 @@ export class Player {
   };
 
   onFileData = (raw_data: ArrayBuffer) => {
-    console.log(raw_data);
+    this.reading = false;
+
+    if (!this.fileInfo) return;
+
     this.decoder.postMessage(
       {
         k: DECODER_REQUEST.kFeedDataReq,
@@ -154,6 +162,9 @@ export class Player {
       [raw_data]
     );
 
+    this.fileInfo.offset += this.fileInfo.chunkSize;
+
+    console.log(`decoder state: ${this.decoderState}`);
     switch (this.decoderState) {
       case DECODER_STATE.decoderStateIdle:
         this.onFileDataUnderDecoderIdle();
@@ -168,6 +179,7 @@ export class Player {
   };
 
   onFileDataUnderDecoderIdle = () => {
+    console.dir(this.fileInfo?.offset);
     if (
       this.fileInfo &&
       (this.fileInfo.offset >= this.waitHeaderLength ||
@@ -193,7 +205,7 @@ export class Player {
   };
 
   readerOneChunk = () => {
-    if (this.downloading || this.isStream) {
+    if (this.reading || this.isStream || !this.fileInfo) {
       return;
     }
 
@@ -218,15 +230,14 @@ export class Player {
     }
 
     var req = {
-      t: kDownloadFileReq,
-      u: this.fileInfo.url,
-      s: start,
-      e: end,
-      q: this.downloadSeqNo,
-      p: this.downloadProto,
+      k: READER_REQUEAST.KReaderFileReq,
+      // u: this.fileInfo.url,
+      // s: start,
+      // e: end,
+      // q: this.downloadSeqNo,
     };
     this.reader.postMessage(req);
-    this.downloading = true;
+    this.reading = true;
   };
 
   startReaderTimer = () => {
@@ -242,7 +253,7 @@ export class Player {
       clearInterval(this.downloadTimer);
       this.downloadTimer = null;
     }
-    this.downloading = false;
+    this.reading = false;
   };
 
   // ------------------------- Reader message func end
@@ -263,11 +274,11 @@ export class Player {
           break;
         case DECODER_RESPONSE.kVideoFrame:
           // this.onVideoFrame(objData.data);
-          this.bufferFrame(objData.data);
+          this.bufferFrame({ type: objData.k, ...objData.data });
           break;
         case DECODER_RESPONSE.kAudioFrame:
           //this.onAudioFrame(objData.data);
-          this.bufferFrame(objData.data);
+          this.bufferFrame({ type: objData.k, ...objData.data });
           break;
         case DECODER_RESPONSE.kDecodeFinishedEvt:
           this.onDecodeFinished();
@@ -296,6 +307,7 @@ export class Player {
     //   this.reportPlayError(objData.e);
     // }
   }
+
   onOpenDecoder(objData: IDecoderRsp) {
     if (this.playerState == PLAYER_STATE.playerStateIdle) {
       return;
@@ -330,6 +342,7 @@ export class Player {
 
   // 初始化文件信息
   initFile = (file: File) => {
+    this.logger.logInfo('init file ~~~~');
     this.reader.postMessage({
       k: READER_REQUEAST.kGetFileInfoReq,
       data: {
@@ -340,37 +353,41 @@ export class Player {
 
   // 初始化 track
   initTrack = (timeTrack: HTMLInputElement, timeLabel: HTMLSpanElement) => {
-    this.timeTrack = timeTrack;
-    this.timeLabel = timeLabel;
-    console.log(timeTrack);
+    !this.timeTrack && (this.timeTrack = timeTrack);
+    !this.timeLabel && (this.timeLabel = timeLabel);
     // timeTrack.current.min = '0';
     // timeTrack.current.max = '99';
     // timeTrack.current.value = '10';
     // timeTrack.current.step = '1';
   };
 
-  onVideoParam = (v) => {
+  onVideoParam = (v: IDecoderRsp['video']) => {
+    console.log('video param');
     if (this.playerState == PLAYER_STATE.playerStateIdle) {
+      return;
+    }
+
+    if (!this.fileInfo) {
       return;
     }
 
     this.logger.logInfo(
       'Video param duation:' +
-        v.d +
+        v.duration +
         ' pixFmt:' +
-        v.p +
+        v.pixFmt +
         ' width:' +
-        v.w +
+        v.width +
         ' height:' +
-        v.h +
+        v.height +
         '.'
     );
-    this.duration = v.d;
-    this.pixFmt = v.p;
+    this.duration = v.duration;
+    this.pixFmt = v.pixFmt;
     //this.canvas.width = v.w;
     //this.canvas.height = v.h;
-    this.videoWidth = v.w;
-    this.videoHeight = v.h;
+    this.videoWidth = v.width;
+    this.videoHeight = v.height;
     this.yLength = this.videoWidth * this.videoHeight;
     this.uvLength = (this.videoWidth / 2) * (this.videoHeight / 2);
 
@@ -408,24 +425,24 @@ export class Player {
     );
   };
 
-  onAudioParam = (a) => {
+  onAudioParam = (a: IDecoderRsp['audio']) => {
     if (this.playerState == PLAYER_STATE.playerStateIdle) {
       return;
     }
 
     this.logger.logInfo(
       'Audio param sampleFmt:' +
-        a.f +
+        a.sampleFmt +
         ' channels:' +
-        a.c +
+        a.channels +
         ' sampleRate:' +
-        a.r +
+        a.sampleRate +
         '.'
     );
 
-    var sampleFmt = a.f;
-    var channels = a.c;
-    var sampleRate = a.r;
+    var sampleFmt = a.sampleFmt;
+    var channels = a.channels;
+    var sampleRate = a.sampleRate;
 
     var encoding = '16bitInt';
     switch (sampleFmt) {
@@ -505,56 +522,56 @@ export class Player {
     });
   };
 
-  displayAudioFrame = (frame) => {
-    if (this.playerState != playerStatePlaying) {
+  displayAudioFrame = (frame: FrameData) => {
+    if (this.playerState != PLAYER_STATE.playerStatePlaying) {
       return false;
     }
 
     if (this.seeking) {
       this.restartAudio();
       this.startTrackTimer();
-      this.hideLoading();
+      //this.hideLoading();
       this.seeking = false;
       this.urgent = false;
     }
 
     if (this.isStream && this.firstAudioFrame) {
       this.firstAudioFrame = false;
-      this.beginTimeOffset = frame.s;
+      this.beginTimeOffset = frame.timestamp;
     }
 
-    this.pcmPlayer.play(new Uint8Array(frame.d));
+    this.pcmPlayer?.play(new Uint8Array(frame.frame_data));
     return true;
   };
 
-  displayVideoFrame = (frame) => {
-    if (this.playerState != playerStatePlaying) {
+  displayVideoFrame = (frame: FrameData) => {
+    if (this.playerState != PLAYER_STATE.playerStatePlaying) {
       return false;
     }
 
     if (this.seeking) {
       this.restartAudio();
       this.startTrackTimer();
-      this.hideLoading();
+      //this.hideLoading();
       this.seeking = false;
       this.urgent = false;
     }
 
     var audioCurTs = this.pcmPlayer?.getTimestamp();
     var audioTimestamp = audioCurTs + this.beginTimeOffset;
-    var delay = frame.s - audioTimestamp;
+    var delay = frame.timestamp - audioTimestamp;
 
     //this.logger.logInfo("displayVideoFrame delay=" + delay + "=" + " " + frame.s  + " - (" + audioCurTs  + " + " + this.beginTimeOffset + ")" + "->" + audioTimestamp);
 
     if (audioTimestamp <= 0 || delay <= 0) {
-      var data = new Uint8Array(frame.d);
+      var data = new Uint8Array(frame.frame_data);
       this.renderVideoFrame(data);
       return true;
     }
     return false;
   };
 
-  renderVideoFrame = (data) => {
+  renderVideoFrame = (data: Uint8Array) => {
     if (!this.webglPlayer) {
       return;
     }
@@ -569,20 +586,21 @@ export class Player {
 
   play = ({
     file,
+    canvas,
+    waitHeaderLength,
     timeTrack,
     timeLabel,
   }: {
     file: File;
+    canvas: HTMLCanvasElement;
+    waitHeaderLength: number;
     timeTrack: HTMLInputElement;
     timeLabel: HTMLSpanElement;
   }) => {
-    this.reader.postMessage({
-      k: READER_REQUEAST.KReaderFileReq,
-      data: {
-        file: file,
-      },
-    });
+    this.readerOneChunk();
 
+    this.canvas = canvas;
+    this.waitHeaderLength = waitHeaderLength || this.waitHeaderLength;
     this.initTrack(timeTrack, timeLabel);
     this.startTrackTimer();
     this.displayLoop();
@@ -638,7 +656,7 @@ export class Player {
     // set to 2 now.
     for (let i = 0; i < 2; ++i) {
       var frame = this.frameBuffer[0];
-      switch (frame.k) {
+      switch (frame.type) {
         case DECODER_RESPONSE.kAudioFrame:
           if (this.displayAudioFrame(frame)) {
             this.frameBuffer.shift();
@@ -699,7 +717,7 @@ export class Player {
 
     let oldest = this.frameBuffer[0];
     let newest = this.frameBuffer[this.frameBuffer.length - 1];
-    return newest.s - oldest.s;
+    return newest.timestamp - oldest.timestamp;
   };
 
   formatTime = (s: number) => {

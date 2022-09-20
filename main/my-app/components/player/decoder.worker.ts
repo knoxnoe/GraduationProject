@@ -27,11 +27,9 @@ worker.Module = {
 
 worker.importScripts('./libffmpeg.js');
 
-console.log(worker);
-
 class Decoder {
   logger: Logger;
-  coreLogLevel = 1;
+  coreLogLevel = 2;
 
   wasmLoaded = false;
   tmpReqQueue: MessageData[] = [];
@@ -153,6 +151,8 @@ class Decoder {
     var paramCount = 7,
       paramSize = 4;
     var paramByteBuffer = worker.Module._malloc(paramCount * paramSize);
+
+    console.log('innter openDecoder func body');
     var ret = worker.Module._openDecoder(
       paramByteBuffer,
       paramCount,
@@ -292,7 +292,6 @@ class Decoder {
 
 worker.decoder = new Decoder();
 worker.addEventListener('message', (event) => {
-  console.log(event);
   if (!worker.decoder) {
     console.log('[Error] Decoder not initialized!');
     return;
@@ -300,6 +299,7 @@ worker.addEventListener('message', (event) => {
 
   //const raw_data = event.data.data.raw_data;
   if (!worker.decoder.wasmLoaded) {
+    console.log('cache');
     worker.decoder.cacheReq(event.data);
     worker.decoder.logger.logInfo('wasm is not loaded, cache data pirority');
     return;

@@ -1,3 +1,5 @@
+import { DECODER_RESPONSE } from './common';
+
 export interface IDecoderRsp {
   res: number; // 正常为0
   audio: {
@@ -17,6 +19,7 @@ export interface IDecoderRsp {
 }
 
 export type FrameData = {
+  type: DECODER_RESPONSE.kAudioFrame | DECODER_RESPONSE.kVideoFrame;
   timestamp: any;
   frame_data: any;
 };

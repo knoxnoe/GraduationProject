@@ -1,8 +1,8 @@
-import { Breadcrumb, Layout, Menu } from 'antd';
-import React, { ReactNode, useState } from 'react';
-import styles from './index.module.less';
+import { Layout, Menu } from 'antd';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import React, { ReactNode, useState } from 'react';
+import styles from './index.module.less';
 
 const { Header, Content, Footer } = Layout;
 
@@ -42,7 +42,9 @@ const MainLayout: React.FC<IProps> = (props) => {
           }))}
         ></Menu>
       </Header>
-      <div style={{ minHeight: 'calc(100vh - 72px)' }}>{props.children}</div>
+      <div style={{ minHeight: 'calc(100vh - 72px)', paddingBottom: 24 }}>
+        {props.children}
+      </div>
       <Footer
         style={{
           textAlign: 'center',

@@ -15,7 +15,8 @@ type MessageData = {
 
 const worker: IWorker = self as any;
 
-const ChunkSize = 65535;
+// 64 * 1024
+const ChunkSize = 65536;
 
 class Reader {
   logger: Logger;
@@ -38,8 +39,6 @@ class Reader {
 
   // 文件信息
   initFileInfo({ file, chunk_size }: IData) {
-    console.log(file);
-
     const chunkSize = chunk_size ?? ChunkSize;
 
     this.size = file.size;
@@ -65,6 +64,7 @@ class Reader {
     });
   }
 
+  // 返回文件数据，并转移所有权
   transferData(data: ArrayBuffer) {
     worker.postMessage(
       {
@@ -78,15 +78,12 @@ class Reader {
   }
 
   // 读取文件
-  readerFileByChunk({ file }: IData) {
+  readerFileByChunk(data: IData) {
     this.reader.readAsArrayBuffer(this.chunkArr[this.curChunkIdx]);
   }
 
-  makeFileChunks(file) {}
-
-  handleReadChunk = (event) => {
-    console.log(event);
-    console.log(this.reader.result);
+  // 文件加载loadend后 处理函数
+  handleReadChunk = () => {
     this.transferData(this.reader.result as ArrayBuffer);
   };
 }
