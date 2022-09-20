@@ -33,7 +33,7 @@ class Reader {
     this.logger = new Logger('FileReader');
     this.reader = new FileReader();
 
-    this.reader.addEventListener('loadend', this.handleEvent);
+    this.reader.addEventListener('loadend', this.handleReadChunk);
   }
 
   // 文件信息
@@ -54,6 +54,15 @@ class Reader {
       this.start = this.end;
       this.end = this.end + chunkSize;
     }
+
+    worker.postMessage({
+      k: READER_RESPONSE.KGetFileInfoRsp,
+      data: {
+        size: this.size,
+        type: this.type,
+        chunkSize: chunkSize,
+      },
+    });
   }
 
   transferData(data: ArrayBuffer) {
@@ -75,7 +84,7 @@ class Reader {
 
   makeFileChunks(file) {}
 
-  handleEvent = (event) => {
+  handleReadChunk = (event) => {
     console.log(event);
     console.log(this.reader.result);
     this.transferData(this.reader.result as ArrayBuffer);
@@ -91,9 +100,8 @@ worker.addEventListener('message', (event) => {
   }
 
   const fileReader = worker.fileReader;
-
   const objData: MessageData = event.data;
-  console.log(objData);
+
   switch (objData.k) {
     case READER_REQUEAST.kGetFileInfoReq:
       fileReader.initFileInfo(objData.data);

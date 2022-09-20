@@ -16,4 +16,54 @@
     font-size: 14px;
     margin-left: 8px;
   }
+
+  .player_container {
+    width: 852px;
+    height: 536px;
+    background-color: white;
+    border: 1px solid rgba(65, 63, 63, 0.9);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    box-sizing: border-box;
+
+    .player_sidebar {
+      height: 50px;
+
+      .palyer_time__track {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+        outline: 0;
+        background-color: transparent;
+        width: calc(100% - 32px);
+        margin: 0 16px 0 16px;
+        height: 8px;
+        overflow: hidden;
+        cursor: pointer;
+
+        &::-webkit-slider-container {
+          /*可以修改容器的若干样式*/
+        }
+        &::-webkit-slider-runnable-track {
+          /*可以修改轨道的若干样式*/
+
+          background: #eee;
+        }
+        &::-webkit-slider-thumb {
+          /*可以修改滑块的若干样式*/
+          -webkit-appearance: none;
+          appearance: none;
+          width: 4px;
+          height: 4px;
+          background-color: #f44336;
+          border: 1px solid transparent;
+          border-image: linear-gradient(#f44336, #f44336) 0 fill / 1 4 1 0 / 0px
+            0px 0 2000px;
+        }
+      }
+    }
+  }
 }
