@@ -8,6 +8,11 @@ const { Header, Content, Footer } = Layout;
 
 const NavItems = [
   {
+    label: '首页',
+    key: '/',
+    path: '/'
+  },
+  {
     label: '在线播放',
     key: '/play',
     path: '/play',

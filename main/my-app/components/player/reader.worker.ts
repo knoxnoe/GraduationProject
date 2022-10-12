@@ -80,6 +80,7 @@ class Reader {
   // 读取文件
   readerFileByChunk(data: IData) {
     this.reader.readAsArrayBuffer(this.chunkArr[this.curChunkIdx]);
+    this.curChunkIdx += 1;
   }
 
   // 文件加载loadend后 处理函数

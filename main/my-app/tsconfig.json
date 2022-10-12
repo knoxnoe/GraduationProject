@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2022",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -27,7 +27,7 @@
       "ESNext"
     ]
   },
-  "include": ["next-env.d.ts", "global.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "global.d.ts", "**/*.ts", "**/*.tsx", "static/decoder.worker.js"],
   "exclude": ["node_modules"]
 }
 

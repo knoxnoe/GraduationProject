@@ -154,17 +154,14 @@ export class Player {
 
     if (!this.fileInfo) return;
 
-    this.decoder.postMessage(
-      {
-        k: DECODER_REQUEST.kFeedDataReq,
-        data: { raw_data: raw_data },
-      },
-      [raw_data]
-    );
+    var objData = {
+      k: DECODER_REQUEST.kFeedDataReq,
+      data: { raw_data: raw_data },
+    };
+    this.decoder.postMessage(objData, [objData.data.raw_data]);
 
     this.fileInfo.offset += this.fileInfo.chunkSize;
 
-    console.log(`decoder state: ${this.decoderState}`);
     switch (this.decoderState) {
       case DECODER_STATE.decoderStateIdle:
         this.onFileDataUnderDecoderIdle();
@@ -179,7 +176,7 @@ export class Player {
   };
 
   onFileDataUnderDecoderIdle = () => {
-    console.dir(this.fileInfo?.offset);
+    console.dir('fileInfo offset:' + this.fileInfo?.offset);
     if (
       this.fileInfo &&
       (this.fileInfo.offset >= this.waitHeaderLength ||
@@ -326,6 +323,7 @@ export class Player {
   }
 
   onDecodeFinished() {
+    console.log('pauseing');
     this.pauseDecoding();
     this.decoderState = DECODER_STATE.decoderStateFinished;
   }
@@ -392,9 +390,9 @@ export class Player {
     this.uvLength = (this.videoWidth / 2) * (this.videoHeight / 2);
 
     //var playCanvasContext = playCanvas.getContext("2d"); //If get 2d, webgl will be disabled.
-    this.webglPlayer = new WebGLPlayer(this.canvas, {
-      preserveDrawingBuffer: false,
-    });
+    // this.webglPlayer = new WebGLPlayer(this.canvas, {
+    //   preserveDrawingBuffer: false,
+    // });
 
     if (this.timeTrack) {
       this.timeTrack.min = '0';
@@ -476,6 +474,7 @@ export class Player {
   };
 
   bufferFrame = (frame: FrameData) => {
+    console.log(frame);
     // If not decoding, it may be frame before seeking, should be discarded.
     if (!this.decoding) {
       return;
@@ -539,6 +538,7 @@ export class Player {
       this.firstAudioFrame = false;
       this.beginTimeOffset = frame.timestamp;
     }
+    console.log(frame);
 
     this.pcmPlayer?.play(new Uint8Array(frame.frame_data));
     return true;
@@ -597,13 +597,20 @@ export class Player {
     timeTrack: HTMLInputElement;
     timeLabel: HTMLSpanElement;
   }) => {
-    this.readerOneChunk();
+    do {
+      this.canvas = canvas;
+      this.waitHeaderLength = waitHeaderLength || this.waitHeaderLength;
+      this.playerState = PLAYER_STATE.playerStatePlaying;
+      this.initTrack(timeTrack, timeLabel);
+      this.startTrackTimer();
+      this.displayLoop();
 
-    this.canvas = canvas;
-    this.waitHeaderLength = waitHeaderLength || this.waitHeaderLength;
-    this.initTrack(timeTrack, timeLabel);
-    this.startTrackTimer();
-    this.displayLoop();
+      this.webglPlayer = new WebGLPlayer(this.canvas, {
+        preserveDrawingBuffer: false,
+      });
+
+      this.readerOneChunk();
+    } while (false);
   };
 
   startTrackTimer = () => {
@@ -654,8 +661,10 @@ export class Player {
     // we need to render more frames in one loop, otherwise display
     // fps won't catch up with source fps, leads to memory increasing,
     // set to 2 now.
+    console.log('consume');
     for (let i = 0; i < 2; ++i) {
       var frame = this.frameBuffer[0];
+      console.dir(frame);
       switch (frame.type) {
         case DECODER_RESPONSE.kAudioFrame:
           if (this.displayAudioFrame(frame)) {
@@ -704,6 +713,7 @@ export class Player {
   };
 
   pauseDecoding = () => {
+    console.log('pausing~~');
     this.decoder.postMessage({
       k: DECODER_REQUEST.kPauseDecodingReq,
     });

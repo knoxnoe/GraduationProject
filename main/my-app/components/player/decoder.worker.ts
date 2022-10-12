@@ -66,7 +66,7 @@ class Decoder {
           frame_data: data,
         },
       };
-
+      console.log(objData);
       worker.postMessage(objData, [objData.data.frame_data.buffer]);
     },
     'viid');
@@ -227,11 +227,15 @@ class Decoder {
     if (this.decodeTimer) {
       clearInterval(this.decodeTimer);
     }
-    this.decodeTimer = setInterval(this.decode, interval);
+    this.decodeTimer = setInterval(() => {
+      this.decode();
+    }, interval);
   }
 
-  decode = function () {
+  decode() {
+    console.log('cccc');
     var ret = worker.Module._decodeOnePacket();
+    console.log('decoding ret:' + ret);
     if (ret == 7) {
       worker.decoder.logger.logInfo(`Start finish.${performance.now()}`);
       worker.decoder.pauseDecoding();
@@ -242,9 +246,10 @@ class Decoder {
       //self.decoder.logger.logInfo("One old frame");
       ret = worker.Module._decodeOnePacket();
     }
-  };
+  }
 
   pauseDecoding() {
+    console.log('pause');
     if (this.decodeTimer) {
       clearInterval(this.decodeTimer);
       this.decodeTimer = null;
@@ -260,6 +265,7 @@ class Decoder {
   seekTo() {}
 
   processReq(messageObj: MessageData) {
+    console.log(messageObj.k);
     switch (messageObj.k) {
       case DECODER_REQUEST.kInitDecoderReq:
         this.initDecoder(messageObj.data);
@@ -275,6 +281,7 @@ class Decoder {
         break;
       case DECODER_REQUEST.kStartDecodingReq:
         this.startDecoding();
+        break;
       case DECODER_REQUEST.kPauseDecodingReq:
         this.pauseDecoding();
         break;
