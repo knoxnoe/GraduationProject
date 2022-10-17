@@ -1,5 +1,7 @@
-import { Button, Drawer, Form, Input } from 'antd';
+import { RESOURCE_PREFIX } from '@/constants/order';
+import { Button, Drawer, Form, Input, message } from 'antd';
 import { FC, useState } from 'react';
+import { useFFmpeg } from 'states/store';
 import BasicNode, { NodeWithData } from './node';
 
 const { Item } = Form;
@@ -9,24 +11,37 @@ const OutputNode: FC<NodeWithData> = (props) => {
   const { label } = data;
   const [visible, setVisible] = useState(false);
   const [$form] = Form.useForm();
+  const FFmpeg = useFFmpeg((state) => state.$FFmpeg)
 
   const handleProcessParams = (values: any) => {
-    console.log('Success:', values);
     data.params = values;
+    setVisible(false);
   };
 
   const downloadOutput = () => {
-    // const data = ffmpegCli.current.FS('readFile', `output.${parameter?.type}`);
-    // const url = URL.createObjectURL(
-    //   new Blob([data.buffer], { type: 'video/x-flv' })
-    // );
-    // let a = document.createElement('a');
-    // a.download = 'xxxx';
-    // a.style.display = 'none';
-    // a.href = url;
-    // document.body.appendChild(a);
-    // a.click();
-    // document.body.removeChild(a);
+
+    const prevId = data.prevIds?.[0];
+    if(prevId === undefined) {
+      message.warn("请连接输出节点");
+      return;
+    }
+
+    const output = FFmpeg?.FS('readFile', `${RESOURCE_PREFIX}${prevId}.mp4`);
+    if(!output) {
+      message.error("文件输出失败！！！")
+      return;
+    }
+    
+    const url = URL.createObjectURL(
+      new Blob([output.buffer])
+    );
+    let a = document.createElement('a');
+    a.download = `${data.params.type}.mp4`;
+    a.style.display = 'none';
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (

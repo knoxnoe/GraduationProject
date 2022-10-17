@@ -5,7 +5,7 @@ import {
   InputNumber,
   Radio,
   Segmented,
-  TimePicker,
+  TimePicker
 } from 'antd';
 import { FC, useState } from 'react';
 import BasicNode, { NodeWithData } from './node';
@@ -35,6 +35,7 @@ const TransformNode: FC<NodeWithData> = (props) => {
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
     data.params = values;
+    setVisible(false);
   };
 
   return (

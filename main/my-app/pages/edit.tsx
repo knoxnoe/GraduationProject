@@ -2,17 +2,17 @@ import EditManage from '@/components/editManage';
 import FileReader from '@/components/fileReader';
 import Result from '@/components/result';
 import { createFFmpeg, FFmpeg } from '@ffmpeg/ffmpeg';
-import { FormInstance, Steps, UploadFile } from 'antd';
+import { Steps } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { useFFmpeg } from 'states/store';
 
 const { Step } = Steps;
 
 const Edit = () => {
   const [curStep, setCurStep] = useState(0);
-  const [fileList, setFileList] = useState<UploadFile<any>[]>();
-
-  const paramsRef = useRef<{ parameterForm: FormInstance<any> }>();
+  // const [fileList, setFileList] = useState<UploadFile<any>[]>();
   const [parameter, setParameter] = useState<any>();
+  const init$FFmpeg = useFFmpeg((state) => state.init$FFmpeg)
 
   const [loadedFFmpeg, setLoadedFFmpeg] = useState(false);
   const ffmpegCli = useRef<FFmpeg | null>(null);
@@ -33,17 +33,8 @@ const Edit = () => {
       await ffmpegCli.current.load();
     }
     console.log('loaded');
+    init$FFmpeg(ffmpegCli.current)
     setLoadedFFmpeg(true);
-  };
-
-  // 2、参数执行
-  const process = () => {
-    if (paramsRef.current) {
-      const { parameterForm } = paramsRef.current;
-      const params = parameterForm.getFieldsValue(true);
-      setParameter(params);
-      _xxxx();
-    }
   };
 
   const _xxxx = async () => {
@@ -111,9 +102,6 @@ const Edit = () => {
       content: (
         <EditManage
           ffmpegCli={ffmpegCli.current}
-          parameter={parameter}
-          setParameter={setParameter}
-          // ref={paramsRef}
           setStep={setCurStep}
         ></EditManage>
       ),

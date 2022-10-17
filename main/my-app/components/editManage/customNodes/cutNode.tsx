@@ -20,7 +20,6 @@ const CutNode: FC<NodeWithData> = (props) => {
   });
 
   const handleProcessParams = (values: any) => {
-    console.log('Success:', values);
     data.params = values;
 
     if (values.range) {
@@ -30,7 +29,10 @@ const CutNode: FC<NodeWithData> = (props) => {
       const prevNode = $DAG?.getNode(data.prevIds?.[0] as string);
 
       data.command = `ffmpegCli.run('-ss', '${start}', '-i', '${prevNode?.data.resource_name}', '-to', '${end}', '-c:v', 'copy', '-c:a', 'copy', '${data.resource_name}.mp4')`;
+      
+      setVisible(false)
     }
+
   };
 
   return (

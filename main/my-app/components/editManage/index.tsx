@@ -8,7 +8,7 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
+  useState
 } from 'react';
 import ReactFlow, {
   addEdge,
@@ -24,7 +24,7 @@ import ReactFlow, {
   NodeChange,
   ReactFlowInstance,
   ReactFlowProvider,
-  updateEdge,
+  updateEdge
 } from 'react-flow-renderer';
 import { useDAGStore } from '../../states/store';
 import { EditNodeTypes, EDIT_NODE_TYPE, NODE_STATUS } from './constants';
@@ -33,8 +33,6 @@ import NodeProvider from './nodesProvider';
 
 interface IProps {
   ffmpegCli: FFmpeg | null;
-  parameter: any;
-  setParameter: Dispatch<SetStateAction<any>>;
   setStep: Dispatch<SetStateAction<number>>;
 }
 
@@ -69,7 +67,7 @@ export type AtomNode = Node<INodeData>;
 export type AtomEdge = Edge<IEdgeData>;
 
 const EditManage = (props: IProps) => {
-  const { ffmpegCli, setParameter, parameter, setStep } = props;
+  const { ffmpegCli, setStep } = props;
 
   const createUniqueNodeID = useDAGStore((state) => state.createUniqueNodeID);
   const init$DAG = useDAGStore((state) => state.init$DAG);
@@ -233,7 +231,7 @@ const EditManage = (props: IProps) => {
       }
 
       console.log(node.data.command);
-      //eval(node.data.command);
+      eval(node.data.command);
 
       return true;
       //ffmpegCli?.run();

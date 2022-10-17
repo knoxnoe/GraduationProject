@@ -17,6 +17,7 @@ const CompressNode: FC<NodeWithData> = (props) => {
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
     data.params = values;
+    setVisible(false);
   };
 
   return (

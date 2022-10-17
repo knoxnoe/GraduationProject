@@ -2,8 +2,9 @@ import {
   AtomEdge,
   AtomNode,
   IEdgeData,
-  INodeData,
+  INodeData
 } from '@/components/editManage/index';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { UploadFile } from 'antd';
 import { ReactFlowInstance } from 'react-flow-renderer';
 import create from 'zustand';
@@ -30,8 +31,8 @@ export const useDAGStore = create<IDAGStore>()((set, get) => ({
   },
 }));
 
-//
 
+// File global store
 interface IFileStore {
   files: UploadFile<any>[];
   updateFiles: (files: UploadFile<any>[]) => void;
@@ -44,4 +45,16 @@ export const useFileStore = create<IFileStore>()((set) => ({
   count: 0,
   updateFiles: (files) => set((state) => ({ files: [...files] })),
   addCount: () => set((state) => ({ count: state.count + 1 })),
+}));
+
+
+// FFmpeg store
+interface IFFmpegStore {
+  $FFmpeg: FFmpeg | null,
+  init$FFmpeg: (instance: FFmpeg) => void;
+}
+
+export const useFFmpeg = create<IFFmpegStore>()((set) => ({
+  $FFmpeg: null,
+  init$FFmpeg: (instance) => set((state) => ({$FFmpeg: instance})) 
 }));

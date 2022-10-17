@@ -7,7 +7,7 @@ import {
   Radio,
   Segmented,
   Select,
-  TimePicker,
+  TimePicker
 } from 'antd';
 import { FC, useState } from 'react';
 import BasicNode, { NodeWithData } from './node';
@@ -43,6 +43,8 @@ const ExtractNode: FC<NodeWithData> = (props) => {
 
   const handleProcessParams = (values: any) => {
     console.log('Success:', values);
+    data.params = values;
+    setVisible(false);
   };
 
   return (
